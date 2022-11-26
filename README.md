@@ -36,3 +36,6 @@
 - account login:
  = emai: admin@admin.com
  - password: secret
+
+- command crawl:
+ - php artisan command:daily-ebay-crawl
