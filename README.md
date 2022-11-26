@@ -32,3 +32,7 @@
    - php artisan queue:clear
    - php artisan queue:restart
    - php artisan queue:work
+
+- account login:
+ = emai: admin@admin.com
+ - password: secret
