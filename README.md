@@ -6,6 +6,7 @@
       - DB_DATABASE=ebay_crawl
       - DB_USERNAME=root
       - DB_PASSWORD=password
+   + CRWAL CONFIG
       - EBAY_CRAWL_URL=https://www.ebay-kleinanzeigen.de/s-autos/anbieter:privat/anzeige:angebote/preis:200:5000/seite:__CURRENT_PAGE__/auto/k0c216
       - EBAY_URL=https://www.ebay-kleinanzeigen.de
       - EBAY_DAILY_CRAWL=01:08
