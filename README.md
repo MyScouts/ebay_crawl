@@ -27,14 +27,14 @@
    - php artisan queue:work --timeout=0
    - php artisan schedule:work
    
-- clear cache when pull code:
+- allway run with command clear cache when pull new code:
    - php artisan optimize:clear
    - php artisan queue:clear
    - php artisan queue:restart
    - php artisan queue:work
 
 - account login:
- = emai: admin@admin.com
+ - emai: admin@admin.com
  - password: secret
 
 - command crawl:
