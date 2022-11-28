@@ -29,7 +29,7 @@ class CreateUsersTable extends Migration
             $table->boolean('to_be_logged_out')->default(false);
             $table->string('provider')->nullable();
             $table->string('provider_id')->nullable();
-            $table->bigInteger('exp_publish')->nullable();
+            $table->dateTime('exp_publish')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
