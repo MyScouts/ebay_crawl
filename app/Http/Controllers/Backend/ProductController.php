@@ -2,25 +2,35 @@
 
 namespace App\Http\Controllers\Backend;
 
+use App\Domains\Auth\Models\User;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Product\PublishReqequest;
 use App\Models\Product;
 use Cache;
+use Carbon\Carbon;
+use Log;
 
 class ProductController extends Controller
 {
 
     public function index()
     {
+        $productPublishingKey = Product::PRODUCT_PUBLISHING_KEY;
+        // Cache::forget($productPublishingKey);
         $publish = $this->getProductPublish();
-        return view('backend.products.index', compact('publish'));
+        $expPublish = User::find(auth()->id());
+        $hasExp =  !empty($expPublish->exp_publish) && Carbon::now()->lte($expPublish->exp_publish);
+        $timeReload = $hasExp ? Carbon::now()->diffInSeconds($expPublish->exp_publish) * 1000 + 5000 : null;
+        return view('backend.products.index', compact('publish', 'timeReload'));
     }
 
-    public function publishDo($productId)
+    public function publishDo(PublishReqequest $request, $productId)
     {
         $product = Product::findOrFail($productId);
         $data = [
             'publish_date' => now(),
             'publisher'    => auth()->user()->email,
+            'description'  => request('description')
         ];
         $this->updateProductStatus($productId, $data);
         return redirect()->route('admin.products.list')->withFlashSuccess("Product #{$product->ebay_id} is published!");
@@ -28,7 +38,6 @@ class ProductController extends Controller
 
     public function unPublishProduct($productId)
     {
-
         $product = Product::findOrFail($productId);
         $data = [
             'deleted_at'    => now(),
@@ -36,13 +45,23 @@ class ProductController extends Controller
         ];
         $this->updateProductStatus($productId, $data);
 
-        return redirect()->route('admin.products.list')->withFlashSuccess("UnPublish product #{$product->ebay_id} successfully!");
+        return redirect()->route('admin.products.list')->withFlashSuccess("Delete product #{$product->ebay_id} successfully!");
     }
 
     public function nextProduct()
     {
         $cacheKey = str_replace('__USER_ID__', auth()->id(), Product::PRODUCT_PUBLISH_KEY);
+        $productPublishingKey = Product::PRODUCT_PUBLISHING_KEY;
+        $productId = Cache::get($cacheKey);
         Cache::forget($cacheKey);
+
+        if (Cache::has($productPublishingKey) && !empty($productId) && intval($productId) > 0) {
+            $productsPublishing = explode(',', Cache::get($productPublishingKey));
+            $pod = array_search($productId, $productsPublishing);
+            if (count($productsPublishing) > 0 && isset($productsPublishing[$pod])) unset($productsPublishing[$pod]);
+            $productsPublishing = array_unique(array_filter($productsPublishing));
+            Cache::forever($productPublishingKey, implode(',', $productsPublishing));
+        }
         return redirect()->route('admin.products.list');
     }
 
@@ -51,6 +70,7 @@ class ProductController extends Controller
         $cacheKey = str_replace('__USER_ID__', auth()->id(), Product::PRODUCT_PUBLISH_KEY);
         $productPublishingKey = Product::PRODUCT_PUBLISHING_KEY;
         $productsPublishing = [];
+        $exitsProduct = false;
 
         if (Cache::has($productPublishingKey)) {
             $productsPublishing = explode(',', Cache::get($productPublishingKey));
@@ -59,21 +79,31 @@ class ProductController extends Controller
         $publish = Product::whereNull('publish_date')
             ->whereNotIn('id', $productsPublishing)
             ->select('ebay_id', 'ebay_url', 'description', 'id')
-            ->first();
+            ->get();
+
+        if (!empty($publish) && count($publish) > 0) $publish = $publish->random(1);
+
+        $publish = $publish->first();
+
+        Log::info("getProductPublish", ['key' => $cacheKey, 'key' => Cache::get($cacheKey)]);
         if (Cache::has($cacheKey)) {
             $productId = Cache::get($cacheKey);
             $product = Product::where('id', $productId)
                 ->whereNull('publish_date')
                 ->select('ebay_id', 'ebay_url', 'description', 'id')
                 ->first();
-            $publish = $product ?? $publish;
+
+            $publish = empty($product) ? $publish : $product;
+            $exitsProduct = true;
         }
 
         if (!empty($publish)) {
             Cache::forever($cacheKey, $publish->id);
             array_push($productsPublishing, $publish->id);
             $productsPublishing = array_unique(array_filter($productsPublishing));
+            if (!$exitsProduct) $this->saveExpPublish(auth()->id());
         };
+
         Cache::forever($productPublishingKey, implode(',', $productsPublishing));
         return $publish;
     }
@@ -94,5 +124,20 @@ class ProductController extends Controller
 
         $productsPublishing = array_unique(array_filter($productsPublishing));
         Cache::forever($productPublishingKey, implode(',', $productsPublishing));
+    }
+
+
+    /**
+     * saveExpPublish
+     *
+     * @param  int $userId
+     * @return void
+     */
+    private function saveExpPublish(int $userId): void
+    {
+        $expMinutes = config('product.exp_publish');
+        User::where('id', $userId)->update([
+            'exp_publish' => Carbon::now()->addMinutes($expMinutes)->format('Y-m-d H:i:00')
+        ]);
     }
 }

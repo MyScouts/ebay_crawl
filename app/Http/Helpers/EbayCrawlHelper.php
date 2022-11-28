@@ -2,9 +2,11 @@
 
 namespace App\Http\Helpers;
 
+use App\Domains\Auth\Models\User;
 use App\Jobs\CrawlEbayJobs;
 use App\Models\Product;
 use Bus;
+use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
@@ -16,6 +18,12 @@ class EbayCrawlHelper
     const CRAWL_URL_KEY = 'EBAY_CRAWL_URL';
     const EBAY_URL_KEY = 'EBAY_URL';
 
+    /**
+     * httpRequest
+     *
+     * @param  mixed $crawlUrls
+     * @return
+     */
     public static function httpRequest($crawlUrls)
     {
         $clientSetting = [

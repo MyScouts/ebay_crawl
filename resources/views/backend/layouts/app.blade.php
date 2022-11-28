@@ -51,6 +51,7 @@
     </script>
     <livewire:scripts />
     @stack('after-scripts')
+    @yield('js-footer')
 </body>
 
 </html>

@@ -6,6 +6,7 @@
     'buttonClass' => '',
     'icon' => false,
     'permission' => false,
+    'text' => '',
 ])
 
 @if ($permission)
@@ -13,15 +14,11 @@
         <form method="POST" action="{{ $action }}" name="{{ $name }}" class="{{ $formClass }}">
             @csrf
             @method($method)
-
-            @if (isset($children))
-                $children
-            @endif
-
+            {{ $slot }}
             <button type="submit" class="{{ $buttonClass }}">
                 @if ($icon)
                     <i class="{{ $icon }}"></i>
-                @endif{{ $slot }}
+                @endif{{ $text }}
             </button>
         </form>
     @endif
@@ -29,11 +26,11 @@
     <form method="POST" action="{{ $action }}" name="{{ $name }}" class="{{ $formClass }}">
         @csrf
         @method($method)
-
+        {{ $slot }}
         <button type="submit" class="{{ $buttonClass }}">
             @if ($icon)
                 <i class="{{ $icon }}"></i>
-            @endif{{ $slot }}
+            @endif{{ $text }}
         </button>
     </form>
 @endif
