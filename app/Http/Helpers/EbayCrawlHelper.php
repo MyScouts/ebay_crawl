@@ -26,9 +26,7 @@ class EbayCrawlHelper
      */
     public static function httpRequest($crawlUrls)
     {
-        $clientSetting = [
-            'allow_redirects' => true,
-        ];
+        $clientSetting = ['allow_redirects' => ['track_redirects' => true], 'verify' => false];
 
         $proxy = env('PROXY');
         $host = env('HOST');
