@@ -32,10 +32,10 @@ class Kernel extends ConsoleKernel
     {
 
         $dailyTime = env('EBAY_DAILY_CRAWL');
-        // $times = explode(';', $dailyTime);
-        // foreach ($times as $time) {
-        //     $schedule->command(DailyEbayCrawlCommand::class)->dailyAt($time);
-        // }
+        $times = explode(';', $dailyTime);
+        foreach ($times as $time) {
+            $schedule->command(DailyEbayCrawlCommand::class)->dailyAt($time);
+        }
 
         $schedule->command(ResetCachePublish::class)->everyMinute();
     }
