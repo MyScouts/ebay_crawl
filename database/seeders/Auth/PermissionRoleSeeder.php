@@ -30,7 +30,7 @@ class PermissionRoleSeeder extends Seeder
         ]);
 
         Role::create([
-            'id' => 1,
+            'id' => 2,
             'type' => User::TYPE_ADMIN,
             'name' => 'publish-product',
         ]);

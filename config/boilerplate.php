@@ -93,7 +93,8 @@ return [
              * Should be Administrator by design and unable to change from the backend
              * It is not recommended to change
              */
-            'admin' => 'Administrator',
+            'admin'     => 'Administrator',
+            'publish'   => 'publish-product'
         ],
     ],
 
