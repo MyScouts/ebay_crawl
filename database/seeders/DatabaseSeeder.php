@@ -25,8 +25,9 @@ class DatabaseSeeder extends Seeder
             'failed_jobs',
         ]);
 
-        $this->call(AuthSeeder::class);
-        $this->call(AnnouncementSeeder::class);
+        $this->call([
+            SettingSeeder::class,
+        ]);
 
         Model::reguard();
     }

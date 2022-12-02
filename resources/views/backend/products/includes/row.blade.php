@@ -18,6 +18,6 @@
     {{ $row->publish_date }}
 </x-livewire-tables::bs4.table.cell>
 
-<x-livewire-tables::bs4.table.cell>
+{{-- <x-livewire-tables::bs4.table.cell>
     @include('backend.products.includes.actions', ['product' => $row])
-</x-livewire-tables::bs4.table.cell>
+</x-livewire-tables::bs4.table.cell> --}}

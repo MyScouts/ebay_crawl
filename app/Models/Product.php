@@ -28,6 +28,11 @@ class Product extends Model
         return $query->where('description', 'like', "%" . $searchTerm . "%");
     }
 
+    public function scopeSearchUser($query, $searchUser)
+    {
+        return $query->where('publisher', 'like', "%" . $searchUser . "%");
+    }
+
     public function getEbayUrlAttribute($value)
     {
         return "https://www.ebay-kleinanzeigen.de$value";

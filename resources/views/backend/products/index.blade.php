@@ -8,50 +8,7 @@
 
 @section('content')
     <x-backend.card>
-        @if (isset($publish))
-            <x-slot name="header">
-                Publish Car #{{ $publish->ebay_id }}
-            </x-slot>
-
-            <x-slot name="headerActions">
-                <x-utils.link class="card-header-action" data-coreui-toggle="collapse" href="#productDesc" role="button"
-                    aria-expanded="false" aria-controls="productDesc" :text="__('Read more')" icon="c-icon cil-toggle-off"
-                    id="readmore-btn" />
-            </x-slot>
-
-            <x-slot name="body">
-                <x-forms.patch :action="route('admin.products.publishDo', ['productId' => $publish->id])">
-                    <h6 class="text-sm">
-                        <span class="font-weight-bold">DETAIL URL:</span>
-                        <x-utils.link :href="$publish->ebay_url" :text="$publish->ebay_url" target="_blank" />
-                    </h6>
-                    <div class="collapse mt-2" id="productDesc">
-                        <span class="font-weight-bold">DESCIPTION:</span>
-                        <span class="data-description">{!! highlightNumber($publish->description) !!}</span>
-                        <div class="mb-3">
-                            <label for="saveContent" class="form-label font-weight-bold">Save content:</label>
-                            <textarea class="form-control" id="saveContent" rows="3" required></textarea>
-                        </div>
-                    </div>
-                </x-forms.patch>
-                <div class="text-center">
-                    <x-utils.form-children :action="route('admin.products.publishDo', ['productId' => $publish->id])" method="patch" button-class="btn btn-success"
-                        icon="cil-check-circle" :text="__('Save')" formClass="d-inline form-publish" id="formPublish">
-                        <textarea class="form-control" name="description" id="description" rows="3" hidden></textarea>
-                    </x-utils.form-children>
-
-                    <x-utils.form-button :action="route('admin.products.unPublishProduct', ['productId' => $publish->id])" method="patch" button-class="btn btn-danger" icon="cil-trash"
-                        name="confirm-item">
-                        @lang('Delete')
-                    </x-utils.form-button>
-
-                    <x-utils.link :href="route('admin.products.nextProduct')" :text="__('Next') . ' (đã làm:' . $logged_in_user->totalPublish() . ' còn lại:' . $total  .')'" class="btn btn-dark" icon="cil-arrow-circle-right" />
-                </div>
-
-            </x-slot>
-        @else
-            <x-slot name="header">Not found product need publish!</x-slot>
-        @endif
+        @include('backend.products.includes.publish-product-card')
     </x-backend.card>
 
     <x-backend.card>
@@ -60,7 +17,13 @@
         </x-slot>
 
         <x-slot name="headerActions">
-            <x-utils.link icon="c-icon cil-sync" class="card-header-action btn btn-info text-dark" :href="route('admin.products.list')"
+
+            <button type="button" class="btn btn-success" data-coreui-toggle="modal" data-coreui-target="#exampleModal">
+                <i class="c-icon cil-fax"></i>
+                Export data
+            </button>
+
+            <x-utils.link icon="c-icon cil-sync" class="btn btn-info text-white text-sm" :href="route('admin.products.list')"
                 :text="__('Reload')" />
         </x-slot>
 
@@ -68,58 +31,37 @@
             <livewire:backend.products-table />
         </x-slot>
     </x-backend.card>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{{ route('admin.products.exportProduct') }}" method="POST">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Choose time export</h5>
+                        <button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div data-coreui-locale="en-US" data-coreui-toggle="date-picker" id="start-date"
+                                    data-coreui-placeholder="{{ __('Start Date') }}"></div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div data-coreui-locale="en-US" data-coreui-toggle="date-picker" id="end-date"
+                                    data-coreui-placeholder="{{ __('End Date') }}"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
-@section('js-footer')
-    <script>
-        console.log("Time reload: " + {{ $timeReload ?? 0 }});
-        let selectText = null;
-
-        $('body').keypress(function(e) {
-            if (e.which == 13) {
-                const description = $('#saveContent').val();
-                if (description.trim() <= 0) return;
-                $('.form-publish').trigger('submit');
-                return false;
-            }
-        });
-
-        $('.data-description').keyup(function() {
-            selectText = getSelectionText();
-            if (selectText.length <= 0) return;
-            $('#saveContent').val(selectText);
-        });
-
-        $('.data-description').mouseup(function() {
-            selectText = getSelectionText();
-            if (selectText.length <= 0) return;
-            $('#saveContent').val(selectText);
-        });
-
-        $('#readmore-btn').get(0).click();
-
-        $('.form-publish').submit(function() {
-            $('#description').val($('#saveContent').val());
-        });
-
-        function getSelectionText() {
-            var text = "";
-            if (window.getSelection) {
-                text = window.getSelection().toString();
-            } else if (document.selection && document.selection.type != "Control") {
-                text = document.selection.createRange().text;
-            }
-            return text.trim();
-        }
-    </script>
-
-    @if (!empty($timeReload))
-        <script>
-            console.log({{ $timeReload }});
-            setTimeout(() => {
-                window.location.reload(true);
-            }, {{ $timeReload }});
-        </script>
-    @endif
-
-@endsection
+@include('backend.products.includes.javascript')

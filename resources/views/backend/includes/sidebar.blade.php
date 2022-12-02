@@ -64,6 +64,13 @@
         @endif
 
         @if ($logged_in_user->hasAllAccess())
+            <li class="c-sidebar-nav-item">
+                <x-utils.link class="c-sidebar-nav-link" :href="route('admin.setting.index')" :active="activeClass(Route::is('admin.setting.*'), 'c-active')"
+                    icon="c-sidebar-nav-icon cil-settings" :text="__('Setting')" />
+            </li>
+        @endif
+
+        @if ($logged_in_user->hasAllAccess())
             <li class="c-sidebar-nav-dropdown">
                 <x-utils.link href="#" icon="c-sidebar-nav-icon cil-list" class="c-sidebar-nav-dropdown-toggle"
                     :text="__('Logs')" />

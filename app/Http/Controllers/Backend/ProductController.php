@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Domains\Auth\Models\User;
+use App\Exports\ProductExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Backend\Product\ExportProductRequest;
 use App\Http\Requests\Product\PublishReqequest;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Models\UserAction;
 use Cache;
 use Carbon\Carbon;
 use Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
@@ -157,9 +161,19 @@ class ProductController extends Controller
      */
     private function saveExpPublish(int $userId): void
     {
-        $expMinutes = config('product.exp_publish');
+        $expMinutesSetting = Setting::where('key', Setting::EXP_PUBLISH_MINUTES)->select('value')->first();
+        $expMinutes = isset($expMinutesSetting->value) ? intval($expMinutesSetting->value) : 60;
         User::where('id', $userId)->update([
             'exp_publish' => Carbon::now()->addMinutes($expMinutes)->format('Y-m-d H:i:00')
         ]);
+    }
+
+    public function exportProduct(ExportProductRequest $request)
+    {
+        $data = $request->validated();
+        $now = date('Ymdhis');
+        $startDate = date('Y-m-d', strtotime($data['date-picker-start-date']));
+        $endDate = date('Y-m-d', strtotime($data['date-picker-end-date']));
+        return Excel::download(new ProductExport($startDate, $endDate), "product-export-$now.xlsx");
     }
 }

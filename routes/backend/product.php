@@ -1,13 +1,14 @@
 <?php
 
+use App\Http\Controllers\Backend\ExportImportController;
 use App\Http\Controllers\Backend\ProductController;
 use Illuminate\Support\Facades\Route;
 use Tabuna\Breadcrumbs\Trail;
 
 Route::group([
-    'prefix'    => 'products',
-    'as'        => 'products.',
-    'middleware' => 'role:publish-product|' . config('boilerplate.access.role.admin')
+    'prefix'        => 'products',
+    'as'            => 'products.',
+    'middleware'    => 'role:publish-product|' . config('boilerplate.access.role.admin')
 ], function () {
     Route::get('', [ProductController::class, 'index'])
         ->name('list')
@@ -19,4 +20,5 @@ Route::group([
     Route::patch('{productId}/publish',     [ProductController::class, 'publishDo'])->name('publishDo');
     Route::patch('{productId}/unPublish',   [ProductController::class, 'unPublishProduct'])->name('unPublishProduct');
     Route::get('/next',                     [ProductController::class, 'nextProduct'])->name('nextProduct');
+    Route::post('/export',                  [ProductController::class, 'exportProduct'])->name('exportProduct');
 });

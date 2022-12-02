@@ -5,6 +5,7 @@ namespace App\Http\Helpers;
 use App\Domains\Auth\Models\User;
 use App\Jobs\CrawlEbayJobs;
 use App\Models\Product;
+use App\Models\Setting;
 use Bus;
 use Carbon\Carbon;
 use Exception;
@@ -15,7 +16,6 @@ use Log;
 
 class EbayCrawlHelper
 {
-    const CRAWL_URL_KEY = 'EBAY_CRAWL_URL';
     const EBAY_URL_KEY = 'EBAY_URL';
 
     /**
@@ -47,8 +47,8 @@ class EbayCrawlHelper
      */
     public static function getDetailUrls(int $page)
     {
-        $crawlUrls = env(EbayCrawlHelper::CRAWL_URL_KEY);
-        if (strlen($crawlUrls) <= 0) throw new Exception("Urls links for crawl not setting!");
+        $crawlUrls = Setting::where('key', Setting::EBAY_CRAWL_URL)->select('value')->first();
+        if (!isset($crawlUrls->value) || strlen($crawlUrls->value) <= 0) throw new Exception("Urls links for crawl not setting!");
         $crawlUrls = str_replace('__CURRENT_PAGE__', $page, $crawlUrls);
 
         $htmlContent = self::httpRequest($crawlUrls);
@@ -61,7 +61,7 @@ class EbayCrawlHelper
         foreach ($cardElms as $key => $value) {
             $urls[] = $value->href;
         }
-        $hasNextPage =  isset($hasNextPageElms) && count($hasNextPageElms) > 0;
+        $hasNextPage = isset($hasNextPageElms) && count($hasNextPageElms) > 0;
         return [$urls, $hasNextPage];
     }
 
@@ -73,7 +73,8 @@ class EbayCrawlHelper
      */
     public static function processingCrawl(array $crawlUrls)
     {
-        $ebayUrl = env(self::EBAY_URL_KEY, 'https://www.ebay-kleinanzeigen.de');
+        $ebayUrl = Setting::where('key', Setting::EBAY_BASE_URL)->select('value')->first();
+        $ebayUrl = isset($ebayUrl->value) ? $ebayUrl->value : 'https://www.ebay-kleinanzeigen.de';
         $data = [];
         foreach ($crawlUrls as $key => $value) {
             $htmlDetail = self::httpRequest($ebayUrl . $value);

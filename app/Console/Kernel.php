@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Console\Commands\DailyEbayCrawlCommand;
 use App\Console\Commands\ResetCachePublish;
+use App\Models\Setting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Log;
@@ -31,7 +32,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
 
-        $dailyTime = env('EBAY_DAILY_CRAWL');
+        $dailyTimeSetting = Setting::where('key', Setting::EBAY_DAILY_CRAWL)->select('value')->first();
+        $dailyTime = isset($dailyTimeSetting->value) ? $dailyTimeSetting->value : "";
         $times = explode(';', $dailyTime);
         foreach ($times as $time) {
             $schedule->command(DailyEbayCrawlCommand::class)->dailyAt($time);

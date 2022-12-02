@@ -11,6 +11,8 @@
     @yield('meta')
 
     @stack('before-styles')
+    <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui-pro@4.4.1/dist/css/coreui.min.css" rel="stylesheet"
+        integrity="sha384-ancM2XfKXXNg2l08AgpTUzRISdhh77O9e24ZZ7KfZMgEUBCUKKT/N6mIYkTz2n4v" crossorigin="anonymous">
     <link href="{{ mix('css/backend.css') }}" rel="stylesheet">
     <livewire:styles />
     @stack('after-styles')
@@ -46,8 +48,12 @@
     <script src="{{ mix('js/manifest.js') }}"></script>
     <script src="{{ mix('js/vendor.js') }}"></script>
     <script src="{{ mix('js/backend.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.2.0/dist/js/coreui.bundle.min.js"
-        integrity="sha384-n0qOYeB4ohUPebL1M9qb/hfYkTp4lvnZM6U6phkRofqsMzK29IdkBJPegsyfj/r4" crossorigin="anonymous">
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js"
+        integrity=" sha384-Xe+8cL9oJa6tN/veChSP7q+mnSPaj5Bcu9mPX5F5xIGE0DVittaqT5lorf0EI7Vk" crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui-pro@4.4.1/dist/js/coreui.min.js"
+        integrity="sha384-r5pcNbFTLtNvjUWWbZX8SNS9fpzAlYD/XwfKVQAqos0A3zn2gMcsj/W2cl8oZcBi" crossorigin="anonymous">
     </script>
     <livewire:scripts />
     @stack('after-scripts')

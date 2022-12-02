@@ -78,18 +78,18 @@ class UsersTable extends DataTableComponent
                     User::TYPE_ADMIN => 'Administrators',
                     User::TYPE_USER => 'Users',
                 ]),
-            'active' => Filter::make('Active')
-                ->select([
-                    '' => 'Any',
-                    'yes' => 'Yes',
-                    'no' => 'No',
-                ]),
-            'verified' => Filter::make('E-mail Verified')
-                ->select([
-                    '' => 'Any',
-                    'yes' => 'Yes',
-                    'no' => 'No',
-                ]),
+            // 'active' => Filter::make('Active')
+            //     ->select([
+            //         '' => 'Any',
+            //         'yes' => 'Yes',
+            //         'no' => 'No',
+            //     ]),
+            // 'verified' => Filter::make('E-mail Verified')
+            //     ->select([
+            //         '' => 'Any',
+            //         'yes' => 'Yes',
+            //         'no' => 'No',
+            //     ]),
         ];
     }
 
