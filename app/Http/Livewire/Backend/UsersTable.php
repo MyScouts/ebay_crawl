@@ -99,16 +99,12 @@ class UsersTable extends DataTableComponent
     public function columns(): array
     {
         return [
-            Column::make(__('Type'))
-                ->sortable(),
-            Column::make(__('Name'))
-                ->sortable(),
-            Column::make(__('E-mail'), 'email')
-                ->sortable(),
-            // Column::make(__('Verified'), 'email_verified_at')
-            //     ->sortable(),
-            // Column::make(__('2FA'), 'two_factor_auth_count')
-            //     ->sortable(),
+            Column::make(__('Type'))->sortable(),
+            Column::make(__('Name'))->sortable(),
+            Column::make(__('E-mail'), 'email')->sortable(),
+            Column::make(__('Total Publish'))->sortable(),
+            Column::make(__('Total Deleted'))->sortable(),
+            Column::make(__('Total Next'))->sortable(),
             Column::make(__('Roles')),
             Column::make(__('Additional Permissions')),
             Column::make(__('Actions')),

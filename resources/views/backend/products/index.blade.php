@@ -27,26 +27,25 @@
                     </h6>
                     <div class="collapse mt-2" id="productDesc">
                         <span class="font-weight-bold">DESCIPTION:</span>
-                        <span>{{ $publish->description }}</span>
+                        <span class="data-description">{!! highlightNumber($publish->description) !!}</span>
                         <div class="mb-3">
                             <label for="saveContent" class="form-label font-weight-bold">Save content:</label>
                             <textarea class="form-control" id="saveContent" rows="3" required></textarea>
                         </div>
                     </div>
                 </x-forms.patch>
-                <div class="text-right">
-                    <x-utils.form-children :action="route('admin.products.publishDo', ['productId' => $publish->id])" method="patch" button-class="btn btn-success btn-sm"
-                        name="confirm-item" icon="cil-check-circle" :text="__('Save')" formClass="d-inline form-publish">
+                <div class="text-center">
+                    <x-utils.form-children :action="route('admin.products.publishDo', ['productId' => $publish->id])" method="patch" button-class="btn btn-success"
+                        icon="cil-check-circle" :text="__('Save')" formClass="d-inline form-publish" id="formPublish">
                         <textarea class="form-control" name="description" id="description" rows="3" hidden></textarea>
                     </x-utils.form-children>
 
-                    <x-utils.form-button :action="route('admin.products.unPublishProduct', ['productId' => $publish->id])" method="patch" button-class="btn btn-danger btn-sm"
-                        icon="cil-trash" name="confirm-item">
+                    <x-utils.form-button :action="route('admin.products.unPublishProduct', ['productId' => $publish->id])" method="patch" button-class="btn btn-danger" icon="cil-trash"
+                        name="confirm-item">
                         @lang('Delete')
                     </x-utils.form-button>
 
-                    <x-utils.link :href="route('admin.products.nextProduct')" :text="__('Next')" class="btn btn-dark btn-sm"
-                        icon="cil-arrow-circle-right" />
+                    <x-utils.link :href="route('admin.products.nextProduct')" :text="__('Next') . ' (đã làm:' . $logged_in_user->totalPublish() . ' còn lại:' . $total  .')'" class="btn btn-dark" icon="cil-arrow-circle-right" />
                 </div>
 
             </x-slot>
@@ -73,12 +72,45 @@
 
 @section('js-footer')
     <script>
-        $('#readmore-btn')[0].click();
+        console.log("Time reload: " + {{ $timeReload ?? 0 }});
+        let selectText = null;
 
-        $('.form-publish').submit(function(){
-            $('#description').val($('#saveContent').val());
-
+        $('body').keypress(function(e) {
+            if (e.which == 13) {
+                const description = $('#saveContent').val();
+                if (description.trim() <= 0) return;
+                $('.form-publish').trigger('submit');
+                return false;
+            }
         });
+
+        $('.data-description').keyup(function() {
+            selectText = getSelectionText();
+            if (selectText.length <= 0) return;
+            $('#saveContent').val(selectText);
+        });
+
+        $('.data-description').mouseup(function() {
+            selectText = getSelectionText();
+            if (selectText.length <= 0) return;
+            $('#saveContent').val(selectText);
+        });
+
+        $('#readmore-btn').get(0).click();
+
+        $('.form-publish').submit(function() {
+            $('#description').val($('#saveContent').val());
+        });
+
+        function getSelectionText() {
+            var text = "";
+            if (window.getSelection) {
+                text = window.getSelection().toString();
+            } else if (document.selection && document.selection.type != "Control") {
+                text = document.selection.createRange().text;
+            }
+            return text.trim();
+        }
     </script>
 
     @if (!empty($timeReload))

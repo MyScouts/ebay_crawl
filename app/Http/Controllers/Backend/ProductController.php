@@ -6,6 +6,7 @@ use App\Domains\Auth\Models\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\PublishReqequest;
 use App\Models\Product;
+use App\Models\UserAction;
 use Cache;
 use Carbon\Carbon;
 use Log;
@@ -15,17 +16,30 @@ class ProductController extends Controller
 
     public function index()
     {
-        $productPublishingKey = Product::PRODUCT_PUBLISHING_KEY;
-        // Cache::forget($productPublishingKey);
         $publish = $this->getProductPublish();
+
+        $cacheKey = str_replace('__USER_ID__', auth()->id(), Product::PRODUCT_PUBLISH_KEY);
+        $productPublishingKey = Product::PRODUCT_PUBLISHING_KEY;
+
+        $productId = Cache::get($cacheKey);
+        $productPublishing = Cache::get($productPublishingKey);
+        $productIgnore = explode(',', $productPublishing);
+        array_push($productIgnore, $productId);
+
+        $total = Product::whereNotIn('id', $productIgnore)->whereNull('publish_date')->count();
+
         $expPublish = User::find(auth()->id());
         $hasExp =  !empty($expPublish->exp_publish) && Carbon::now()->lte($expPublish->exp_publish);
         $timeReload = $hasExp ? Carbon::now()->diffInSeconds($expPublish->exp_publish) * 1000 + 5000 : null;
-        return view('backend.products.index', compact('publish', 'timeReload'));
+        return view('backend.products.index', compact('publish', 'timeReload', 'total'));
     }
 
     public function publishDo(PublishReqequest $request, $productId)
     {
+        UserAction::create([
+            'user_id'       => auth()->id(),
+            'action_type'   => UserAction::AC_SAVE
+        ]);
         $product = Product::findOrFail($productId);
         $data = [
             'publish_date' => now(),
@@ -39,6 +53,10 @@ class ProductController extends Controller
     public function unPublishProduct($productId)
     {
         $product = Product::findOrFail($productId);
+        UserAction::create([
+            'user_id'       => auth()->id(),
+            'action_type'   => UserAction::AC_DELETE
+        ]);
         $data = [
             'deleted_at'    => now(),
             'publish_date'  => null
@@ -50,6 +68,10 @@ class ProductController extends Controller
 
     public function nextProduct()
     {
+        UserAction::create([
+            'user_id'       => auth()->id(),
+            'action_type'   => UserAction::AC_NEXT
+        ]);
         $cacheKey = str_replace('__USER_ID__', auth()->id(), Product::PRODUCT_PUBLISH_KEY);
         $productPublishingKey = Product::PRODUCT_PUBLISHING_KEY;
         $productId = Cache::get($cacheKey);

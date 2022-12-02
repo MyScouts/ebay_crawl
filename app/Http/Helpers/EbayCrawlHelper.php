@@ -84,7 +84,7 @@ class EbayCrawlHelper
 
             $descriptionElm = $dom->find('#viewad-description #viewad-description-text');
             $description = is_array($descriptionElm) && count($descriptionElm) > 0 ? $descriptionElm[0]->innertext : null;
-            $description = preg_replace("/<(?:br)[^>]*>/i", "\n", $description);
+            $description = strip_tags(preg_replace("/<(?:br)[^>]*>/i", "\n", $description));
             $description = trim($description);
 
             if (!empty($productId) && !empty($description)) {

@@ -10,13 +10,17 @@
     <a href="mailto:{{ $row->email }}">{{ $row->email }}</a>
 </x-livewire-tables::bs4.table.cell>
 
-{{-- <x-livewire-tables::bs4.table.cell>
-    @include('backend.auth.user.includes.verified', ['user' => $row])
-</x-livewire-tables::bs4.table.cell> --}}
+<x-livewire-tables::bs4.table.cell>
+    {{ $row->totalPublish() }}
+</x-livewire-tables::bs4.table.cell>
 
-{{-- <x-livewire-tables::bs4.table.cell>
-    @include('backend.auth.user.includes.2fa', ['user' => $row])
-</x-livewire-tables::bs4.table.cell> --}}
+<x-livewire-tables::bs4.table.cell>
+    {{ $row->totalDeleted() }}
+</x-livewire-tables::bs4.table.cell>
+
+<x-livewire-tables::bs4.table.cell>
+    {{ $row->totalNext() }}
+</x-livewire-tables::bs4.table.cell>
 
 <x-livewire-tables::bs4.table.cell>
     {!! $row->roles_label !!}

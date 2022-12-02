@@ -8,6 +8,7 @@ use App\Domains\Auth\Models\Traits\Relationship\UserRelationship;
 use App\Domains\Auth\Models\Traits\Scope\UserScope;
 use App\Domains\Auth\Notifications\Frontend\ResetPasswordNotification;
 use App\Domains\Auth\Notifications\Frontend\VerifyEmail;
+use App\Models\UserAction;
 use DarkGhostHunter\Laraguard\Contracts\TwoFactorAuthenticatable;
 use DarkGhostHunter\Laraguard\TwoFactorAuthentication;
 use Database\Factories\UserFactory;
@@ -148,7 +149,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function canBeImpersonated(): bool
     {
-        return ! $this->isMasterAdmin();
+        return !$this->isMasterAdmin();
     }
 
     /**
@@ -159,5 +160,20 @@ class User extends Authenticatable implements MustVerifyEmail
     protected static function newFactory()
     {
         return UserFactory::new();
+    }
+
+    public function totalPublish()
+    {
+        return $this->hasMany(UserAction::class)->where('action_type', UserAction::AC_SAVE)->count();
+    }
+
+    public function totalNext()
+    {
+        return $this->hasMany(UserAction::class)->where('action_type', UserAction::AC_NEXT)->count();
+    }
+
+    public function totalDeleted()
+    {
+        return $this->hasMany(UserAction::class)->where('action_type', UserAction::AC_DELETE)->count();
     }
 }
