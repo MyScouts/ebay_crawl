@@ -57,7 +57,7 @@ class EbayCrawlHelper
         $urls = [];
         Log::debug("getDetailUrls:::cardElms", ['value' => count($cardElms)]);
         foreach ($cardElms as $value) {
-            $timeElm = $value->find('.aditem-main .icon-calendar-open');
+            $timeElm = $value->find('.aditem-main .aditem-main--top--right');
             if (isset($timeElm) && count($timeElm) > 0) {
                 $timeText = strip_tags($timeElm[0]->innertext);
                 Log::debug("getDetailUrls:::timeText", ['value' => $timeElm[0]->innertext]);
