@@ -60,15 +60,14 @@ class EbayCrawlHelper
             if (isset($timeElm) && count($timeElm) > 0) {
                 $timeText = strip_tags($timeElm[0]->innertext);
                 $time = trim(substr($timeText, strpos($timeText, ',') + 1));
-                Log::debug("getDetailUrls:::Time", ['timeText' => $timeText]);
                 if (preg_match("/^(?:2[0-4]|[01][1-9]|10):([0-5][0-9])$/", $time) == 1) {
                     $dailyTimeSetting = Setting::where('key', Setting::EBAY_DAILY_CRAWL_PRODUCT_TIME)->select('value')->first();
                     $dailyTime = isset($dailyTimeSetting->value) && count(explode(';', $dailyTimeSetting->value)) == 2 ? $dailyTimeSetting->value : "03:00;16:00";
                     $times = explode(';', $dailyTime);
+                    Log::debug("getDetailUrls:::Time", ['time-product' => $time, 'start-date' => $times[0], 'end-date' => $times[1]]);
                     $time = strtotime($time);
                     $startDate = strtotime($times[0]);
                     $endDate = strtotime($times[1]);
-                    Log::debug("getDetailUrls:::Time", ['time-product' => $time, 'start-date' => $startDate, 'end-date' => $endDate]);
                     if ($time >= $startDate && $time <= $endDate) {
                         $urlElm = $value->find('.aditem-image a');
                         if (isset($urlElm) && count($urlElm) > 0) $urls[] = $urlElm[0]->href;
