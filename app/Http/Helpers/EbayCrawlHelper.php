@@ -60,7 +60,7 @@ class EbayCrawlHelper
 
             if (isset($timeElm) && count($timeElm) > 0) {
                 $timeText = strip_tags($timeElm[0]->innertext);
-                Log::debug("getDetailUrls:::timeText", ['value' => $timeText]);
+                Log::debug("getDetailUrls:::timeText", ['value' => $timeElm[0]->innertext]);
                 $time = trim(substr($value, strpos($timeText, ',') + 1));
                 if (preg_match("/^(?:2[0-4]|[01][1-9]|10):([0-5][0-9])$/", $time) == 1) {
                     $time = strtotime($time);
