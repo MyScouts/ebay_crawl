@@ -60,7 +60,7 @@ class EbayCrawlHelper
             if (isset($timeElm) && count($timeElm) > 0) {
                 $timeText = strip_tags($timeElm[0]->innertext);
                 $time = trim(substr($value, strpos($timeText, ',') + 1));
-                Log::debug("getDetailUrls:::Time", ['value' => $time]);
+                Log::debug("getDetailUrls:::Time", ['timeText' => $timeText]);
                 if (preg_match("/^(?:2[0-4]|[01][1-9]|10):([0-5][0-9])$/", $time) == 1) {
                     $dailyTimeSetting = Setting::where('key', Setting::EBAY_DAILY_CRAWL_PRODUCT_TIME)->select('value')->first();
                     $dailyTime = isset($dailyTimeSetting->value) && count(explode(';', $dailyTimeSetting->value)) == 2 ? $dailyTimeSetting->value : "03:00;16:00";
