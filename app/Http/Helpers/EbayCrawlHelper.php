@@ -49,8 +49,7 @@ class EbayCrawlHelper
     {
         $crawlUrls = Setting::where('key', Setting::EBAY_CRAWL_URL)->select('value')->first();
         if (!isset($crawlUrls->value) || strlen($crawlUrls->value) <= 0) throw new Exception("Urls links for crawl not setting!");
-        $crawlUrls = str_replace('__CURRENT_PAGE__', $page, $crawlUrls);
-
+        $crawlUrls = str_replace('__CURRENT_PAGE__', $page, $crawlUrls->value);
         $htmlContent = self::httpRequest($crawlUrls);
         $dom = HtmlDomParser::str_get_html($htmlContent);
         $cardElms = $dom->find('#srchrslt-adtable .ad-listitem');
