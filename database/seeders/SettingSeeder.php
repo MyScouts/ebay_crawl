@@ -14,6 +14,7 @@ class SettingSeeder extends Seeder
      */
     public function run()
     {
+        Setting::truncate();
         Setting::insert([
             [
                 'key' => Setting::EBAY_CRAWL_URL,
@@ -26,9 +27,14 @@ class SettingSeeder extends Seeder
                 'name' => 'Ebay base url'
             ],
             [
-                'key' => Setting::EBAY_DAILY_CRAWL,
-                'value' => '00:00;05:00;10:00;15:00;20:00',
-                'name' => 'Ebay crawl with times'
+                'key' => Setting::EBAY_DAILY_CRAWL_PRODUCT_TIME,
+                'value' => '03:00;16:00',
+                'name' => 'Ebay crawl product with time (start-time;end-time)'
+            ],
+            [
+                'key' => Setting::EBAY_DAILY_CRAWL_HOURS,
+                'value' => '4',
+                'name' => 'Ebay crawl hours'
             ],
             [
                 'key' => Setting::EXP_PUBLISH_MINUTES,

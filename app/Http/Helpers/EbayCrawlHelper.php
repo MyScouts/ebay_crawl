@@ -53,14 +53,33 @@ class EbayCrawlHelper
 
         $htmlContent = self::httpRequest($crawlUrls);
         $dom = HtmlDomParser::str_get_html($htmlContent);
-        $cardElms = $dom->find('#srchrslt-adtable .ad-listitem a');
-
-        $hasNextPageElms = $dom->find('#srchrslt-pagination .pagination-next');
+        $cardElms = $dom->find('#srchrslt-adtable .ad-listitem');
 
         $urls = [];
-        foreach ($cardElms as $key => $value) {
-            $urls[] = $value->href;
+        foreach ($cardElms as $value) {
+            $timeElm = $value->find('.aditem-main .icon-calendar-open');
+
+            if (isset($timeElm) && count($timeElm) > 0) {
+                $timeText = strip_tags($timeElm[0]->innertext);
+                Log::debug("getDetailUrls:::timeText", ['value' => $timeText]);
+                $time = trim(substr($value, strpos($timeText, ',') + 1));
+                if (preg_match("/^(?:2[0-4]|[01][1-9]|10):([0-5][0-9])$/", $time) == 1) {
+                    $time = strtotime($time);
+                    $dailyTimeSetting = Setting::where('key', Setting::EBAY_DAILY_CRAWL_PRODUCT_TIME)->select('value')->first();
+                    $dailyTime = isset($dailyTimeSetting->value) && count(explode(';', $dailyTimeSetting->value)) == 2 ? $dailyTimeSetting->value : "03:00;16:00";
+                    $times = explode(';', $dailyTime);
+                    $startDate = strtotime($times[0]);
+                    $endDate = strtotime($times[1]);
+
+                    if ($time >= $startDate && $time <= $endDate) {
+                        $urlElm = $value->find('.aditem-image a');
+                        if (isset($urlElm) && count($urlElm) > 0) $urls[] = $urlElm[0]->href;
+                    }
+                }
+            }
         }
+
+        $hasNextPageElms = $dom->find('#srchrslt-pagination .pagination-next');
         $hasNextPage = isset($hasNextPageElms) && count($hasNextPageElms) > 0;
         return [$urls, $hasNextPage];
     }

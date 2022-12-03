@@ -32,13 +32,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
 
-        $dailyTimeSetting = Setting::where('key', Setting::EBAY_DAILY_CRAWL)->select('value')->first();
-        $dailyTime = isset($dailyTimeSetting->value) ? $dailyTimeSetting->value : "";
-        $times = explode(';', $dailyTime);
-        foreach ($times as $time) {
-            $schedule->command(DailyEbayCrawlCommand::class)->dailyAt($time);
-        }
-
+        $dailyTimeSetting = Setting::where('key', Setting::EBAY_DAILY_CRAWL_HOURS)->select('value')->first();
+        $hour = isset($dailyTimeSetting->value) && intval($dailyTimeSetting->value) > 0 ? intval($dailyTimeSetting->value) : "4";
+        $schedule->command(DailyEbayCrawlCommand::class)->cron("0 */$hour * * *");
         $schedule->command(ResetCachePublish::class)->everyMinute();
     }
 
