@@ -89,6 +89,7 @@ class EbayCrawlHelper
      */
     public static function processingCrawl(array $crawlUrls)
     {
+        Log::info("===========START-CRAWL===========");
         $ebayUrl = Setting::where('key', Setting::EBAY_BASE_URL)->select('value')->first();
         $ebayUrl = isset($ebayUrl->value) ? $ebayUrl->value : 'https://www.ebay-kleinanzeigen.de';
         $data = [];
