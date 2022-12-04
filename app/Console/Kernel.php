@@ -33,7 +33,7 @@ class Kernel extends ConsoleKernel
     {
 
         $dailyTimeSetting = Setting::where('key', Setting::EBAY_DAILY_CRAWL_HOURS)->select('value')->first();
-        $hour = isset($dailyTimeSetting->value) && intval($dailyTimeSetting->value) > 0 ? intval($dailyTimeSetting->value) : "4";
+        $hour = isset($dailyTimeSetting->value) && intval($dailyTimeSetting->value) > 0 ? intval($dailyTimeSetting->value) : "2";
         $schedule->command(DailyEbayCrawlCommand::class)->cron("0 */$hour * * *");
         $schedule->command(ResetCachePublish::class)->everyMinute();
     }

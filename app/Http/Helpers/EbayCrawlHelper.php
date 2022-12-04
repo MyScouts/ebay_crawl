@@ -36,7 +36,6 @@ class EbayCrawlHelper
         $client = new Client($clientSetting);
         $request = new Request('GET', $crawlUrls);
         $res = $client->sendAsync($request)->wait();
-        Log::info('EbayCrawlHelper ::: httpRequest', ['url' => $crawlUrls, 'statusCode' => $res->getStatusCode()]);
         return $res->getBody()->getContents();
     }
 
@@ -64,7 +63,6 @@ class EbayCrawlHelper
                     $dailyTimeSetting = Setting::where('key', Setting::EBAY_DAILY_CRAWL_PRODUCT_TIME)->select('value')->first();
                     $dailyTime = isset($dailyTimeSetting->value) && count(explode(';', $dailyTimeSetting->value)) == 2 ? $dailyTimeSetting->value : "03:00;16:00";
                     $times = explode(';', $dailyTime);
-                    Log::debug("getDetailUrls:::Time", ['time-product' => $time, 'start-date' => $times[0], 'end-date' => $times[1]]);
                     $time = strtotime($time);
                     $startDate = strtotime($times[0]);
                     $endDate = strtotime($times[1]);
@@ -113,6 +111,7 @@ class EbayCrawlHelper
                 ];
             }
         }
+        Log::info("EBAY-PRODUCT-SAVE", ['data' => $data]);
         if (count($data) > 0) Product::upsert($data, ['ebay_id'], ['description', 'ebay_url']);
     }
 
@@ -128,7 +127,6 @@ class EbayCrawlHelper
         $jobs = [];
         do {
             [$productUrls, $hasNext] = self::getDetailUrls($page);
-            Log::info("EbayCrawlHelper:: beginCrawl", ['url' => count($productUrls), 'next' => $hasNext, 'page' => $page]);
             // self::processingCrawl($productUrls);
             if (count($productUrls) > 0) dispatch(new CrawlEbayJobs($productUrls));
             $next = $hasNext;
