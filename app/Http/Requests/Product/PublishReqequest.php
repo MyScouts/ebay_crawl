@@ -24,7 +24,7 @@ class PublishReqequest extends FormRequest
     public function rules()
     {
         return [
-            'description' => ['required', 'regex:/^[0-9\.\-\/]+$/']
+            'description' => ['required', 'regex:/^[0-9\.\-\/ ]+$/']
         ];
     }
 

@@ -18,7 +18,8 @@ class ProductsTable extends DataTableComponent
     {
         return Product::whereNotNull('publish_date')
             ->when($this->getFilter('search'), fn ($query, $term) => $query->search($term))
-            ->when($this->getFilter('user'), fn ($query, $user) => $query->searchUser($user));
+            ->when($this->getFilter('user'), fn ($query, $user) => $query->searchUser($user))
+            ->orderByDesc('publish_date');
     }
 
     /**
