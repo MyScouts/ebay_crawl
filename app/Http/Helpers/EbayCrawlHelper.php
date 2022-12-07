@@ -113,8 +113,8 @@ class EbayCrawlHelper
         Log::info("EBAY-PRODUCT-SAVE", ['data' => $data]);
         if (count($data) > 0) {
             foreach ($data as $item) {
-                $product = Product::where('ebay_id', $item['ebay_id'])->exists();
-                if (!$product) Product::create($item);
+                $product = Product::where('ebay_id', $item['ebay_id'])->count();
+                if (count($product) <= 0) Product::create($item);
             }
         };
     }
