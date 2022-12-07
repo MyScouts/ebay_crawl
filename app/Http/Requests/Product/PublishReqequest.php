@@ -27,4 +27,11 @@ class PublishReqequest extends FormRequest
             'description' => ['required', 'regex:/^[0-9\.\-\/]+$/']
         ];
     }
+
+    public function messages()
+    {
+        return [
+            'description.regex'   => "Description only allow number, please select correct input!"
+        ];
+    }
 }
