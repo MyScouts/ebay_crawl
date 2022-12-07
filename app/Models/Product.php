@@ -25,7 +25,8 @@ class Product extends Model
 
     public function scopeSearch($query, $searchTerm)
     {
-        return $query->where('description', 'like', "%" . $searchTerm . "%");
+        return $query->where('description', 'like', "%" . $searchTerm . "%")
+            ->orWhere('ebay_id', $searchTerm);
     }
 
     public function scopeSearchUser($query, $searchUser)
