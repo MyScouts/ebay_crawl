@@ -132,11 +132,10 @@ class EbayCrawlHelper
         $jobs = [];
         do {
             [$productUrls, $hasNext] = self::getDetailUrls($page);
-            // self::processingCrawl($productUrls);
             if (count($productUrls) > 0) {
-                Log::debug("STEP", ['page' => $page, 'totalUrl' => count($productUrls)]);
                 dispatch(new CrawlEbayJobs($productUrls));
             };
+            Log::debug("STEP", ['page' => $page, 'totalUrl' => count($productUrls)]);
             $next = $hasNext;
             $page++;
         } while ($next);
