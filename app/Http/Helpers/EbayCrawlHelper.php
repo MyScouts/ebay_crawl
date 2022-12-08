@@ -110,11 +110,13 @@ class EbayCrawlHelper
                 ];
             }
         }
-        Log::info("EBAY-PRODUCT-SAVE", ['data' => $data]);
         if (count($data) > 0) {
             foreach ($data as $item) {
                 $product = Product::where('ebay_id', $item['ebay_id'])->get();
-                if (!isset($product) || empty($product)) Product::create($item);
+                if (!isset($product) || empty($product)) {
+                    Log::info("EBAY-PRODUCT-SAVE", ['data' => $item]);
+                    Product::create($item);
+                }
             }
         };
     }
