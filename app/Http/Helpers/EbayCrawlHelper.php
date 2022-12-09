@@ -15,8 +15,9 @@ use Log;
 
 class EbayCrawlHelper
 {
-    const EBAY_URL_KEY = 'EBAY_URL';
-    const TOTAL_ERRORS_CRAWL = "TOTAL_ERRORS_CRAWL";
+    const EBAY_URL_KEY          = 'EBAY_URL';
+    const TOTAL_ERRORS_CRAWL    = "TOTAL_ERRORS_CRAWL";
+    const TOTAL_ADD_PRODUCT     = "TOTAL_ADD_PRODUCT";
 
     /**
      * httpRequest
@@ -124,19 +125,21 @@ class EbayCrawlHelper
         if (count($data) > 0) {
             foreach ($data as $item) {
                 try {
-                    $result = Product::firstOrCreate([
+                    Product::firstOrCreate([
                         'ebay_id'       => $item['ebay_id']
                     ], [
                         'description'   => $item['description'],
                         'ebay_url'      => $item['ebay_url']
                     ]);
+                    Cache::increment(self::TOTAL_ADD_PRODUCT, 1);
                 } catch (\Throwable $th) {
                     Cache::increment(self::TOTAL_ERRORS_CRAWL, 1);
                     $totalErrors = Cache::get(self::TOTAL_ERRORS_CRAWL);
-                    if (intval($totalErrors) >= 15) {
+                    if (intval($totalErrors) >= 10) {
                         Artisan::call('queue:clear');
-                        Log::alert("CANCEL JOB");
+                        Log::alert("CANCEL JOB", ['TOTAL-PRODUCT-ADDED' => Cache::get(self::TOTAL_ADD_PRODUCT)]);
                         Cache::forget(self::TOTAL_ERRORS_CRAWL);
+                        Cache::forget(self::TOTAL_ADD_PRODUCT);
                     }
                 }
             }
@@ -151,6 +154,7 @@ class EbayCrawlHelper
     public static function beginCrawl()
     {
         Cache::forget(self::TOTAL_ERRORS_CRAWL);
+        Cache::forget(self::TOTAL_ADD_PRODUCT);
         $page = 1;
         $next = true;
         $jobs = [];
