@@ -111,7 +111,6 @@ class ProductController extends Controller
 
         $publish = $publish->first();
 
-        Log::info("getProductPublish", ['key' => $cacheKey, 'key' => Cache::get($cacheKey)]);
         if (Cache::has($cacheKey)) {
             $productId = Cache::get($cacheKey);
             $product = Product::where('id', $productId)
