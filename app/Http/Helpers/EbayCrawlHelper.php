@@ -30,7 +30,7 @@ class EbayCrawlHelper
     {
         $clientSetting = ['allow_redirects' => ['track_redirects' => true], 'verify' => false];
         $client = new Client($clientSetting);
-        $request = new Request('GET', $crawlUrls);
+        $request = new Request('GET', $crawlUrls, ['connect_timeout' => 60]);
         $res = $client->sendAsync($request)->wait();
         return $res->getBody()->getContents();
     }
