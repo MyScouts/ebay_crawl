@@ -2,23 +2,21 @@
 
 namespace App\Http\Helpers;
 
-use App\Domains\Auth\Models\User;
 use App\Jobs\CrawlEbayJobs;
 use App\Models\Product;
 use App\Models\Setting;
 use Artisan;
-use Bus;
-use Carbon\Carbon;
+use Cache;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
-use Illuminate\Support\Facades\Http;
 use KubAT\PhpSimple\HtmlDomParser;
 use Log;
 
 class EbayCrawlHelper
 {
     const EBAY_URL_KEY = 'EBAY_URL';
+    const TOTAL_ERRORS_CRAWL = "TOTAL_ERRORS_CRAWL";
 
     /**
      * httpRequest
@@ -134,8 +132,13 @@ class EbayCrawlHelper
                     ]);
                     Log::info("EBAY-PRODUCT-SAVE", ['data' => $item, 'result' => $result]);
                 } catch (\Throwable $th) {
-                    // Artisan::call('queue:clear');
-                    Log::alert("CANCEL JOB", ['message' => $th->getMessage()]);
+                    Cache::increment(self::TOTAL_ERRORS_CRAWL, 1);
+                    $totalErrors = Cache::get(self::TOTAL_ERRORS_CRAWL);
+                    if ($totalErrors >= 25) {
+                        Artisan::call('queue:clear');
+                        Log::alert("CANCEL JOB");
+                        Cache::forget(self::TOTAL_ERRORS_CRAWL);
+                    }
                 }
             }
         };
@@ -148,6 +151,7 @@ class EbayCrawlHelper
      */
     public static function beginCrawl()
     {
+        Cache::forget(self::TOTAL_ERRORS_CRAWL);
         $page = 1;
         $next = true;
         $jobs = [];
