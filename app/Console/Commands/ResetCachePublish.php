@@ -62,7 +62,6 @@ class ResetCachePublish extends Command
             if (Cache::has($cacheKey)) {
                 $productId = Cache::get($cacheKey);
                 Cache::forget($cacheKey);
-                Log::info("User", ['id' => $userId, 'productId' => $productId, 'cache-after' => Cache::get($cacheKey)]);
                 $pod = array_search($productId, $productsPublishing);
                 if (isset($productsPublishing[$pod])) unset($productsPublishing[$pod]);
             }
@@ -71,6 +70,5 @@ class ResetCachePublish extends Command
         $productsPublishing = array_unique(array_filter($productsPublishing));
         Cache::forever($productPublishingKey, implode(',', $productsPublishing));
         User::whereIn('id', $userIds)->update(['exp_publish' => null]);
-        Log::info("ResetCachePublish::Successfully", ['time' => Carbon::now(), 'userId' => $userIds]);
     }
 }
