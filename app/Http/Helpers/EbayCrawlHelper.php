@@ -28,11 +28,11 @@ class EbayCrawlHelper
      */
     public static function httpRequest($crawlUrls)
     {
-        $response = Http::timeout(60)
-            ->withoutVerifying()
-            ->withOptions(['verify' => false])
-            ->get($crawlUrls);
-        return $response->getBody()->getContents();
+        $clientSetting = ['allow_redirects' => ['track_redirects' => true], 'verify' => false];
+        $client = new Client($clientSetting);
+        $request = new Request('GET', $crawlUrls);
+        $res = $client->sendAsync($request)->wait();
+        return $res->getBody()->getContents();
     }
 
     /**
