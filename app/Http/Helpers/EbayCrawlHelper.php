@@ -2,16 +2,12 @@
 
 namespace App\Http\Helpers;
 
-use App\Domains\Auth\Models\User;
 use App\Jobs\CrawlEbayJobs;
 use App\Models\Product;
 use App\Models\Setting;
 use Artisan;
-use Bus;
-use Carbon\Carbon;
 use Exception;
-use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Request;
+use Illuminate\Support\Facades\Http;
 use KubAT\PhpSimple\HtmlDomParser;
 use Log;
 
@@ -27,17 +23,9 @@ class EbayCrawlHelper
      */
     public static function httpRequest($crawlUrls)
     {
-        $clientSetting = ['allow_redirects' => ['track_redirects' => true], 'verify' => false];
-
-        $proxy = env('PROXY');
-        $host = env('HOST');
-        $useCustomProxy = env('CUSTOM_PROXY', false);
-        if ($useCustomProxy) $clientSetting['proxy'] = "http://$proxy:$host";
-
-        $client = new Client($clientSetting);
-        $request = new Request('GET', $crawlUrls);
-        $res = $client->sendAsync($request)->wait();
-        return $res->getBody()->getContents();
+        $headers = ['verify' => false];
+        $response = Http::timeout(60)->withHeaders($headers)->get($crawlUrls);
+        return $response->getBody()->getContents();
     }
 
     /**
@@ -141,10 +129,10 @@ class EbayCrawlHelper
         $jobs = [];
         do {
             [$productUrls, $hasNext] = self::getDetailUrls($page);
+            Log::debug("STEP", ['page' => $page, 'totalUrl' => count($productUrls)]);
             if (count($productUrls) > 0) {
                 dispatch(new CrawlEbayJobs($productUrls));
             };
-            Log::debug("STEP", ['page' => $page, 'totalUrl' => count($productUrls)]);
             $next = $hasNext;
             $page++;
         } while ($next);
