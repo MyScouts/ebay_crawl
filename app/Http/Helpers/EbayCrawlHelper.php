@@ -112,13 +112,17 @@ class EbayCrawlHelper
         }
         if (count($data) > 0) {
             foreach ($data as $item) {
-                $result = Product::firstOrCreate([
-                    'ebay_id'       => $item['ebay_id']
-                ], [
-                    'description'   => $item['description'],
-                    'ebay_url'      => $item['ebay_url']
-                ]);
-                Log::info("EBAY-PRODUCT-SAVE", ['data' => $item, 'result' => $result]);
+                try {
+                    $result = Product::firstOrCreate([
+                        'ebay_id'       => $item['ebay_id']
+                    ], [
+                        'description'   => $item['description'],
+                        'ebay_url'      => $item['ebay_url']
+                    ]);
+                    Log::info("EBAY-PRODUCT-SAVE", ['data' => $item, 'result' => $result]);
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
             }
         };
     }
