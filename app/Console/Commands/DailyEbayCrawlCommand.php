@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Events\ExecCrawlEbayEvent;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class DailyEbayCrawlCommand extends Command
 {
@@ -38,6 +39,7 @@ class DailyEbayCrawlCommand extends Command
      */
     public function handle()
     {
+        Log::alert("========START_DAILY_CRAWL========");
         return event(new ExecCrawlEbayEvent());
     }
 }

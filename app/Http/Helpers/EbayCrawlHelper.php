@@ -137,7 +137,6 @@ class EbayCrawlHelper
      */
     public static function beginCrawl()
     {
-        Log::info("===========START-CRAWL===========");
         $page = 1;
         $next = true;
         $jobs = [];
