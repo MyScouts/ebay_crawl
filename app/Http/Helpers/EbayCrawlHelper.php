@@ -135,11 +135,11 @@ class EbayCrawlHelper
                 } catch (\Throwable $th) {
                     Cache::increment(self::TOTAL_ERRORS_CRAWL, 1);
                     $totalErrors = Cache::get(self::TOTAL_ERRORS_CRAWL);
-                    if (intval($totalErrors) >= 10) {
+                    $totalErrors = intval($totalErrors);
+                    Log::warning("ERROR $totalErrors");
+                    if ($totalErrors >= 10) {
                         Artisan::call('queue:clear');
                         Log::alert("CANCEL JOB", ['TOTAL-PRODUCT-ADDED' => Cache::get(self::TOTAL_ADD_PRODUCT)]);
-                        Cache::forget(self::TOTAL_ERRORS_CRAWL);
-                        Cache::forget(self::TOTAL_ADD_PRODUCT);
                     }
                 }
             }
