@@ -130,11 +130,10 @@ class EbayCrawlHelper
                         'description'   => $item['description'],
                         'ebay_url'      => $item['ebay_url']
                     ]);
-                    Log::info("EBAY-PRODUCT-SAVE", ['data' => $item, 'result' => $result]);
                 } catch (\Throwable $th) {
                     Cache::increment(self::TOTAL_ERRORS_CRAWL, 1);
                     $totalErrors = Cache::get(self::TOTAL_ERRORS_CRAWL);
-                    if ($totalErrors >= 25) {
+                    if (intval($totalErrors) >= 15) {
                         Artisan::call('queue:clear');
                         Log::alert("CANCEL JOB");
                         Cache::forget(self::TOTAL_ERRORS_CRAWL);
@@ -157,7 +156,6 @@ class EbayCrawlHelper
         $jobs = [];
         do {
             [$productUrls, $hasNext] = self::getDetailUrls($page);
-            Log::debug("STEP", ['page' => $page, 'totalUrl' => count($productUrls)]);
             if (count($productUrls) > 0) {
                 dispatch(new CrawlEbayJobs($productUrls));
             };
