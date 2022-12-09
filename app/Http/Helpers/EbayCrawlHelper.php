@@ -125,9 +125,8 @@ class EbayCrawlHelper
         if (count($data) > 0) {
             foreach ($data as $item) {
                 try {
-                    Product::firstOrCreate([
-                        'ebay_id'       => $item['ebay_id']
-                    ], [
+                    Product::create([
+                        'ebay_id'       => $item['ebay_id'],
                         'description'   => $item['description'],
                         'ebay_url'      => $item['ebay_url']
                     ]);
@@ -136,7 +135,7 @@ class EbayCrawlHelper
                     Cache::increment(self::TOTAL_ERRORS_CRAWL, 1);
                     $totalErrors = Cache::get(self::TOTAL_ERRORS_CRAWL);
                     $totalErrors = intval($totalErrors);
-                    if ($totalErrors >= 6) {
+                    if ($totalErrors >= 50) {
                         Artisan::call('queue:clear');
                         Log::alert("CANCEL JOB", ['TOTAL-PRODUCT-ADDED' => Cache::get(self::TOTAL_ADD_PRODUCT)]);
                     }
