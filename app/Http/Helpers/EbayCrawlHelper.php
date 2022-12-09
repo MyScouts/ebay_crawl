@@ -6,6 +6,7 @@ use App\Domains\Auth\Models\User;
 use App\Jobs\CrawlEbayJobs;
 use App\Models\Product;
 use App\Models\Setting;
+use Artisan;
 use Bus;
 use Carbon\Carbon;
 use Exception;
@@ -122,6 +123,8 @@ class EbayCrawlHelper
                     Log::info("EBAY-PRODUCT-SAVE", ['data' => $item, 'result' => $result]);
                 } catch (\Throwable $th) {
                     //throw $th;
+                    Log::alert("CANCEL JOB", ['message' => $th->getMessage()]);
+                    Artisan::call('queue:clear');
                 }
             }
         };
