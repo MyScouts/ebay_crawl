@@ -2,11 +2,16 @@
 
 namespace App\Http\Helpers;
 
+use App\Domains\Auth\Models\User;
 use App\Jobs\CrawlEbayJobs;
 use App\Models\Product;
 use App\Models\Setting;
 use Artisan;
+use Bus;
+use Carbon\Carbon;
 use Exception;
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Request;
 use Illuminate\Support\Facades\Http;
 use KubAT\PhpSimple\HtmlDomParser;
 use Log;
@@ -23,9 +28,11 @@ class EbayCrawlHelper
      */
     public static function httpRequest($crawlUrls)
     {
-        $headers = ['verify' => false];
-        $response = Http::timeout(60)->withHeaders($headers)->get($crawlUrls);
-        return $response->getBody()->getContents();
+        $clientSetting = ['allow_redirects' => ['track_redirects' => true], 'verify' => false];
+        $client = new Client($clientSetting);
+        $request = new Request('GET', $crawlUrls);
+        $res = $client->sendAsync($request)->wait();
+        return $res->getBody()->getContents();
     }
 
     /**
