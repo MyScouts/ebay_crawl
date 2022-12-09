@@ -122,9 +122,8 @@ class EbayCrawlHelper
                     ]);
                     Log::info("EBAY-PRODUCT-SAVE", ['data' => $item, 'result' => $result]);
                 } catch (\Throwable $th) {
-                    //throw $th;
-                    Log::alert("CANCEL JOB", ['message' => $th->getMessage()]);
                     Artisan::call('queue:clear');
+                    Log::alert("CANCEL JOB", ['message' => $th->getMessage()]);
                 }
             }
         };
