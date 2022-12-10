@@ -105,11 +105,8 @@ class ProductController extends Controller
         $publish = Product::whereNull('publish_date')
             ->whereNotIn('id', $productsPublishing)
             ->select('ebay_id', 'ebay_url', 'description', 'id')
-            ->get();
-
-        if (!empty($publish) && count($publish) > 0) $publish = $publish->random(1);
-
-        $publish = $publish->first();
+            ->orderByDesc('created_at')
+            ->first();
 
         if (Cache::has($cacheKey)) {
             $productId = Cache::get($cacheKey);
