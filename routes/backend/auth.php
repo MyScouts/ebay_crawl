@@ -9,7 +9,7 @@ use Tabuna\Breadcrumbs\Trail;
 Route::group([
     'prefix' => 'auth',
     'as' => 'auth.',
-    'middleware' => config('boilerplate.access.middleware.confirm'),
+    // 'middleware' => config('boilerplate.access.middleware.confirm'),
 ], function () {
 
     Route::get('password/change', [UserPasswordController::class, 'edit'])
