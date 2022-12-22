@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\CleanProductCommand;
 use App\Console\Commands\DailyEbayCrawlCommand;
 use App\Console\Commands\ResetCachePublish;
 use App\Models\Setting;
@@ -37,6 +38,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command(DailyEbayCrawlCommand::class)->cron("0 */$hour * * *");
         $schedule->command(DailyEbayCrawlCommand::class)->cron("*/$hour * * * *");
         $schedule->command(ResetCachePublish::class)->everyMinute();
+        $schedule->command(CleanProductCommand::class)->dailyAt("23:59");
     }
 
     /**
