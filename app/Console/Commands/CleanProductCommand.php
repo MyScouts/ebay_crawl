@@ -41,6 +41,6 @@ class CleanProductCommand extends Command
     {
         Product::where('deleted_at', '<=', Carbon::now()->subDays(1))->forceDelete();
 
-        Product::where('created_at', '<=', Carbon::now()->subDays(3))->forceDelete();
+        Product::where('created_at', '<=', Carbon::now()->subDays(3))->whereNotNull('publish_date')->forceDelete();
     }
 }
