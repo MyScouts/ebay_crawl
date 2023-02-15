@@ -2,16 +2,18 @@
 
 namespace App\Http\Helpers;
 
-use App\Jobs\CrawlEbayJobs;
-use App\Models\Product;
-use App\Models\Setting;
-use Artisan;
+use Log;
 use Cache;
+use Artisan;
 use Exception;
 use GuzzleHttp\Client;
+use App\Models\Product;
+use App\Models\Setting;
+use App\Models\UserAction;
+use App\Jobs\CrawlEbayJobs;
 use GuzzleHttp\Psr7\Request;
+use App\Domains\Auth\Models\User;
 use KubAT\PhpSimple\HtmlDomParser;
-use Log;
 
 class EbayCrawlHelper
 {
@@ -28,18 +30,18 @@ class EbayCrawlHelper
     public static function httpRequest($crawlUrls)
     {
         $headers = [
-            'authority'                 => 'suchen.mobile.de',
+            // 'authority'                 => 'suchen.mobile.de',
             'accept'                    => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-language'           => 'en-US,en;q=0.9,vi;q=0.8',
-            'cache-control'             => 'max-age=0',
-            'sec-ch-ua'                 => '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
-            'sec-ch-ua-mobile'          => '?0',
-            'sec-ch-ua-platform'        => '"macOS"',
-            'sec-fetch-dest'            => 'document',
-            'sec-fetch-mode'            => 'navigate',
-            'sec-fetch-site'            => 'cross-site',
-            'sec-fetch-user'            => '?1',
-            'upgrade-insecure-requests' => '1',
+            // 'cache-control'             => 'max-age=0',
+            // 'sec-ch-ua'                 => '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
+            // 'sec-ch-ua-mobile'          => '?0',
+            // 'sec-ch-ua-platform'        => '"macOS"',
+            // 'sec-fetch-dest'            => 'document',
+            // 'sec-fetch-mode'            => 'navigate',
+            // 'sec-fetch-site'            => 'cross-site',
+            // 'sec-fetch-user'            => '?1',
+            // 'upgrade-insecure-requests' => '1',
             'user-agent'                => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
             'Connection'                => 'keep-alive'
         ];
@@ -48,6 +50,7 @@ class EbayCrawlHelper
         $client = new Client($clientSetting);
         $request = new Request('GET', $crawlUrls, $headers);
         $res = $client->sendAsync($request)->wait();
+        Log::debug("ABDC", ['content' => $res]);
         return $res->getBody()->getContents();
     }
 
@@ -64,7 +67,6 @@ class EbayCrawlHelper
         $htmlContent = self::httpRequest($crawlUrls);
         $dom = HtmlDomParser::str_get_html($htmlContent);
         $cardElms = $dom->find('#srchrslt-adtable .ad-listitem');
-
         $urls = [];
         foreach ($cardElms as $value) {
             $timeElm = $value->find('.aditem-main .aditem-main--top--right');
@@ -78,10 +80,11 @@ class EbayCrawlHelper
                     $time = strtotime($time);
                     $startDate = strtotime($times[0]);
                     $endDate = strtotime($times[1]);
-                    if ($time >= $startDate && $time <= $endDate) {
+
+                    // if ($time >= $startDate && $time <= $endDate) {
                         $urlElm = $value->find('.aditem-image a');
                         if (isset($urlElm) && count($urlElm) > 0) $urls[] = $urlElm[0]->href;
-                    }
+                    // }
                 }
             }
         }
@@ -122,16 +125,41 @@ class EbayCrawlHelper
                 ];
             }
         }
+        Log::emergency("đã chạy");
         if (count($data) > 0) {
             foreach ($data as $item) {
                 try {
-                    Product::create([
-                        'ebay_id'       => $item['ebay_id'],
-                        'description'   => $item['description'],
-                        'ebay_url'      => $item['ebay_url']
-                    ]);
+
+                    $chuoi = $item['description'];
+                    $data=array();
+                    $data2 = preg_match_all('/[\+]?\d{13}|\\d{4}\\s? \d{3}\\s? \d{3}\\s? \d{3}|(?(1)  [\+\s] )\\d{5}\\s? \d{7}|\\d{4}\\s? \d{8}|(?(1)  [\+\s] )\\d{2}\\s? \d{3}\\s? \d{3}\\s? \d{3}|\(?(\d{3})?\)?(?(1)[\-\s] )\d{3}-\d{4}/x',  $chuoi,$data);
+                    Log::alert($chuoi);
+                    Log::alert("Kết quả".$data2);
+                    if($data[0] == null)
+                    {
+                        
+                    }
+                    else {
+                        $mytime = Carbon\Carbon::now();
+                        Log::alert($data[0][0]);
+                        UserAction::create([
+                            'user_id'           => User::first()->id,
+                            'action_type'       => 1,
+                        ]);
+                        Product::create([
+                            'ebay_id'       => $item['ebay_id'],
+                            'description'   => str_replace(" ","",$data[0][0]),
+                            'ebay_url'      => $item['ebay_url'],
+                            'publish_date'  => $mytime->toDateTimeString(),
+                            'publisher'     => User::first()->email
+                        ]);
+                    
+                    }
+
                     Cache::increment(self::TOTAL_ADD_PRODUCT, 1);
+                    
                 } catch (\Throwable $th) {
+                    Log::emergency("có lỗi xảy ra".$th);
                     Cache::increment(self::TOTAL_ERRORS_CRAWL, 1);
                     $totalErrors = Cache::get(self::TOTAL_ERRORS_CRAWL);
                     $totalErrors = intval($totalErrors);
