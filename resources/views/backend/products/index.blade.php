@@ -15,7 +15,7 @@
         <x-slot name="header">
             @lang('Product Management')
         </x-slot>
-
+        
         <x-slot name="headerActions">
 
             <button type="button" class="btn btn-success" data-coreui-toggle="modal" data-coreui-target="#exampleModal">
