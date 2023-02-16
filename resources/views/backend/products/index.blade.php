@@ -28,6 +28,20 @@
         </x-slot>
 
         <x-slot name="body">
+        <?php 
+            $string = "Hello, my phone number is +49 123 456 789 or 0172 -123 4-56 789 , or 0172 1 234 56 7 89, call me if you need help.";
+            $pattern = '/(?<!\d)(\+49|0|0049)[\d .\/:-]+(?!\d)/';
+            preg_match_all($pattern, $string, $matches);
+            $phone_numbers = array_map(function($num) {
+                return preg_replace('/[^0-9]/', '', $num);
+            }, $matches[0]); 
+            $phone_numbers = array_filter($phone_numbers, function($num) {
+                $num = substr($num, -14);
+                return strlen($num) >= 9 && strlen($num) <= 14;  
+            });
+
+            print_r($phone_numbers[0]); 
+        ?>
             <livewire:backend.products-table />
         </x-slot>
     </x-backend.card>

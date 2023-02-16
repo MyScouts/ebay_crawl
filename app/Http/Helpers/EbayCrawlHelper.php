@@ -54,7 +54,25 @@ class EbayCrawlHelper
         Log::debug("ABDC", ['content' => $res]);
         return $res->getBody()->getContents();
     }
+    public static function httpRequestSMS($Address)
+    {
+        // $client = new Client();
 
+        // $headers = [
+        //     'Authorization' => 'Bearer d24ab24a-62fc-4cd7-9a55-4c074389368a',
+        //     'Content-Type' => 'application/json',
+        // ];
+
+        // $body = '{"messageContent": "example message content hong dev","recipientAddressList": ["'.$Address.'"]}';
+        // Log::debug("Tin nhắn", ['content' => $body]);
+        // $response = $client->post('https://api.linkmobility.eu/rest/smsmessaging/text', [
+        //     'headers' => $headers,
+        //     'json' => $body,
+        // ]);
+
+        // $responseData = $response->getBody()->getContents();
+        // Log::debug("Tin nhắn", ['content' => $responseData]);
+    }
     /**
      * initUrl
      *
@@ -130,26 +148,32 @@ class EbayCrawlHelper
         if (count($data) > 0) {
             foreach ($data as $item) {
                 try {
+                    $string = $item['description'];
+                    $pattern = '/(?<!\d)(\+49|0|0049)[\d .\/:-]+(?!\d)/';
+                    preg_match_all($pattern, $string, $matches);
+                    $phone_numbers = array_map(function($num) {
+                        return preg_replace('/[^0-9]/', '', $num);
+                    }, $matches[0]); 
+                    $phone_numbers = array_filter($phone_numbers, function($num) {
+                        $num = substr($num, -14);
+                        return strlen($num) >= 9 && strlen($num) <= 14;  
+                    });
 
-                    $chuoi = $item['description'];
-                    $data=array();
-                    $data2 = preg_match_all('/[\+]?\d{13}|\\d{4}\\s? \d{3}\\s? \d{3}\\s? \d{3}|(?(1)  [\+\s] )\\d{5}\\s? \d{7}|\\d{4}\\s? \d{8}|(?(1)  [\+\s] )\\d{2}\\s? \d{3}\\s? \d{3}\\s? \d{3}|\(?(\d{3})?\)?(?(1)[\-\s] )\d{3}-\d{4}/x',  $chuoi,$data);
-                    Log::alert($chuoi);
-                    Log::alert("Kết quả".$data2);
-                    if($data[0] == null)
+                    if($phone_numbers == null)
                     {
                         
                     }
                     else {
                         $mytime = Carbon::now();
-                        Log::alert($data[0][0]);
+                        Log::alert($phone_numbers[0]);
+                        self::httpRequestSMS("0918447062");
                         UserAction::create([
                             'user_id'           => User::first()->id,
                             'action_type'       => 1,
                         ]);
                         Product::create([
                             'ebay_id'       => $item['ebay_id'],
-                            'description'   => str_replace(" ","",$data[0][0]),
+                            'description'   => str_replace(" ","",$phone_numbers[0]),
                             'ebay_url'      => $item['ebay_url'],
                             'publish_date'  => $mytime->toDateTimeString(),
                             'publisher'     => User::first()->email
