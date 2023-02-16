@@ -6,6 +6,7 @@ use Log;
 use Cache;
 use Artisan;
 use Exception;
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use App\Models\Product;
 use App\Models\Setting;
@@ -140,7 +141,7 @@ class EbayCrawlHelper
                         
                     }
                     else {
-                        $mytime = Carbon\Carbon::now();
+                        $mytime = Carbon::now();
                         Log::alert($data[0][0]);
                         UserAction::create([
                             'user_id'           => User::first()->id,
