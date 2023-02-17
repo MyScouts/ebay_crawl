@@ -197,7 +197,7 @@ class EbayCrawlHelper
                         if(!Product::where("ebay_id",$item['ebay_id'])->where("description",str_replace(" ","",$phone_numbers_cover))->exists())
                         {
                             Log::alert("Chưa có thông tin này gửi tin nhắn");
-                            // self::httpRequestSMS($phone_numbers_cover);
+                            self::httpRequestSMS($phone_numbers_cover);
                             UserAction::create([
                                 'user_id'           => User::first()->id,
                                 'action_type'       => 1,
@@ -221,7 +221,7 @@ class EbayCrawlHelper
                                 // $time2 lớn hơn $time1 7 ngày
                                 Log::alert("Thấy sau 7 ngày gửi tin nhắn");
                                 $Product->update(['publish_date'=>$mytime->toDateTimeString()]);
-                                // self::httpRequestSMS($phone_numbers_cover);
+                                self::httpRequestSMS($phone_numbers_cover);
                                 
                             } else {
                                 // $time2 không lớn hơn $time1 7 ngày
