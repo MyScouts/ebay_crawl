@@ -56,22 +56,35 @@ class EbayCrawlHelper
     }
     public static function httpRequestSMS($Address)
     {
-        // $client = new Client();
+        $client = new Client();
 
-        // $headers = [
-        //     'Authorization' => 'Bearer d24ab24a-62fc-4cd7-9a55-4c074389368a',
-        //     'Content-Type' => 'application/json',
-        // ];
+        $headers = [
+            'Authorization' => 'Bearer d24ab24a-62fc-4cd7-9a55-4c074389368a',
+            'Content-Type' => 'application/json',
+        ];
 
-        // $body = '{"messageContent": "example message content hong dev","recipientAddressList": ["'.$Address.'"]}';
-        // Log::debug("Tin nhắn", ['content' => $body]);
-        // $response = $client->post('https://api.linkmobility.eu/rest/smsmessaging/text', [
-        //     'headers' => $headers,
-        //     'json' => $body,
-        // ]);
+        $body = [
+                "contentCategory" => "informational",
+                "maxSmsPerMessage" => 10,
+                "messageContent" => "Hallo, \nich habe deine Nummer von Kleinanzeigen. Falls du den Wert von deinem Auto genau wissen willst, kannst du das bei uns kostenlos auf www.fahrzeugbewertung.repareo.de machen. Dort bekommst du auch ein sofortiges Kaufangebot.\nLiebe Grüße \nLuka von repareo.de - größtes Werkstattportal Deutschlands",
+                "messageType" => "default",
+                "priority" => 5,
+                "recipientAddressList" => [
+                    $Address
+                ],
+                "senderAddress" => "repareo",
+                "sendAsFlashSms" => false,
+                "senderAddressType" => "alphanumeric",
+                "test" => false,
+                "validityPeriode" => 300
+            ];
+        $response = $client->post('https://api.linkmobility.eu/rest/smsmessaging/text', [
+            'headers' => $headers,
+            'json' => $body,
+        ]);
 
-        // $responseData = $response->getBody()->getContents();
-        // Log::debug("Tin nhắn", ['content' => $responseData]);
+        $responseData = $response->getBody()->getContents();
+        Log::debug("SMS status", ['content' => $responseData]);
     }
     /**
      * initUrl
@@ -159,25 +172,51 @@ class EbayCrawlHelper
                         return strlen($num) >= 9 && strlen($num) <= 14;  
                     });
 
-                    if($phone_numbers == null)
+                    if(!isset($phone_numbers[0]))
                     {
                         
                     }
                     else {
                         $mytime = Carbon::now();
                         Log::alert($phone_numbers[0]);
-                        self::httpRequestSMS("0918447062");
-                        UserAction::create([
-                            'user_id'           => User::first()->id,
-                            'action_type'       => 1,
-                        ]);
-                        Product::create([
-                            'ebay_id'       => $item['ebay_id'],
-                            'description'   => str_replace(" ","",$phone_numbers[0]),
-                            'ebay_url'      => $item['ebay_url'],
-                            'publish_date'  => $mytime->toDateTimeString(),
-                            'publisher'     => User::first()->email
-                        ]);
+                        $phone_numbers_cover = preg_replace('/^0|(?<=\s)0/', '+49', $phone_numbers[0]);
+                        Log::alert("chuyển đổi : ".$phone_numbers_cover);
+                        if(!Product::where("ebay_id",$item['ebay_id'])->where("description",str_replace(" ","",$phone_numbers[0]))->exists())
+                        {
+                            Log::alert("Chưa có thông tin này gửi tin nhắn");
+                            self::httpRequestSMS($phone_numbers_cover);
+                            UserAction::create([
+                                'user_id'           => User::first()->id,
+                                'action_type'       => 1,
+                            ]);
+                            Product::create([
+                                'ebay_id'       => $item['ebay_id'],
+                                'description'   => str_replace(" ","",$phone_numbers[0]),
+                                'ebay_url'      => $item['ebay_url'],
+                                'publish_date'  => $mytime->toDateTimeString(),
+                                'publisher'     => User::first()->email
+                            ]);                            
+                        }
+                        else
+                        {
+                            $Product =  Product::where("ebay_id",$item['ebay_id'])->where("description",str_replace(" ","",$phone_numbers[0]))->first();
+                            Log::alert("có rồi");
+                            $time1 = Carbon::parse($Product->publish_date); 
+                            $time2 = Carbon::parse($mytime->toDateTimeString());
+
+                            if ($time2->diffInDays($time1) > 7) {
+                                // $time2 lớn hơn $time1 7 ngày
+                                Log::alert("Thấy sau 7 ngày gửi tin nhắn");
+                                $Product->update(['publish_date'=>$mytime->toDateTimeString()]);
+                                self::httpRequestSMS($phone_numbers_cover);
+                                
+                            } else {
+                                // $time2 không lớn hơn $time1 7 ngày
+                                Log::alert("Đã thấy trong 7 ngày gần đây");
+
+                            }
+                        }
+
                     
                     }
 
