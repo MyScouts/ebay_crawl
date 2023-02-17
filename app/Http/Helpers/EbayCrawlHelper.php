@@ -56,7 +56,7 @@ class EbayCrawlHelper
     }
     public static function httpRequestSMS($Address)
     {
-        $client = new Client();
+        $client = new Client(['verify' => false]);
 
         $headers = [
             'Authorization' => 'Bearer d24ab24a-62fc-4cd7-9a55-4c074389368a',
