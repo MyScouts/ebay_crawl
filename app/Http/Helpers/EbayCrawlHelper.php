@@ -183,18 +183,22 @@ class EbayCrawlHelper
                     else {
                         $mytime = Carbon::now();
                         Log::alert($phone_numbers[0]);
-                        $phone_numbers_cover = preg_replace('/^0|(?<=\s)0/', '+49', $phone_numbers[0]);
-                        if(strpos($phone_numbers_cover,'490') == 0)
+                        $phone_numbers_cover = $phone_numbers[0];
+                        if (substr($phone_numbers_cover, 0, 3) === "490") {
+                            $phone_numbers_cover = "+49" . substr($phone_numbers_cover, 3);
+                        }
+                        else
                         {
-                            $phone_numbers_cover =  "49".substr($phone_numbers_cover,3,14);
-                        }  
-                        if(strpos($phone_numbers_cover,'+49') == 0)
-                        {
-                            $phone_numbers_cover =  "49".substr($phone_numbers_cover,3,14);
-                        }  
-                        $phone_numbers_cover = "+".$phone_numbers_cover;
+                            $phone_numbers_cover = preg_replace('/^(00|\+)?(49|490|0)?([0-9]+)/', '+49$3', $phone_numbers[0]);
+                        }
+                        
+                        Log::alert("chuyển đổi 1 : ".$phone_numbers_cover);
+
+
+                        
                         Log::alert("chuyển đổi : ".$phone_numbers_cover);
-                        if(!Product::where("ebay_id",$item['ebay_id'])->where("description",str_replace(" ","",$phone_numbers_cover))->exists())
+                        $ProductCheck =  Product::where("description",str_replace(" ","",$phone_numbers_cover))->first();
+                        if($ProductCheck == null)
                         {
                             Log::alert("Chưa có thông tin này gửi tin nhắn");
                             self::httpRequestSMS($phone_numbers_cover);
@@ -212,7 +216,7 @@ class EbayCrawlHelper
                         }
                         else
                         {
-                            $Product =  Product::where("ebay_id",$item['ebay_id'])->where("description",str_replace(" ","",$phone_numbers_cover))->first();
+                            $Product =  Product::where("description",str_replace(" ","",$phone_numbers_cover))->first();
                             Log::alert("có rồi");
                             $time1 = Carbon::parse($Product->publish_date); 
                             $time2 = Carbon::parse($mytime->toDateTimeString());
