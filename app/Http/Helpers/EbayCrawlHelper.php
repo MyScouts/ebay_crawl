@@ -167,11 +167,15 @@ class EbayCrawlHelper
                     $phone_numbers = array_map(function($num) {
                         return preg_replace('/[^0-9]/', '', $num);
                     }, $matches[0]); 
+                    // $phone_numbers = array_map(function($num) {
+                    //     return preg_replace('/490/', '49', $num);
+                    // }, $matches[0]); 
+                    
                     $phone_numbers = array_filter($phone_numbers, function($num) {
                         $num = substr($num, -14);
                         return strlen($num) >= 9 && strlen($num) <= 14;  
                     });
-
+                    
                     if(!isset($phone_numbers[0]))
                     {
                         
@@ -180,18 +184,27 @@ class EbayCrawlHelper
                         $mytime = Carbon::now();
                         Log::alert($phone_numbers[0]);
                         $phone_numbers_cover = preg_replace('/^0|(?<=\s)0/', '+49', $phone_numbers[0]);
+                        if(strpos($phone_numbers_cover,'490') == 0)
+                        {
+                            $phone_numbers_cover =  "49".substr($phone_numbers_cover,3,14);
+                        }  
+                        if(strpos($phone_numbers_cover,'+49') == 0)
+                        {
+                            $phone_numbers_cover =  "49".substr($phone_numbers_cover,3,14);
+                        }  
+                        $phone_numbers_cover = "+".$phone_numbers_cover;
                         Log::alert("chuyển đổi : ".$phone_numbers_cover);
-                        if(!Product::where("ebay_id",$item['ebay_id'])->where("description",str_replace(" ","",$phone_numbers[0]))->exists())
+                        if(!Product::where("ebay_id",$item['ebay_id'])->where("description",str_replace(" ","",$phone_numbers_cover))->exists())
                         {
                             Log::alert("Chưa có thông tin này gửi tin nhắn");
-                            self::httpRequestSMS($phone_numbers_cover);
+                            // self::httpRequestSMS($phone_numbers_cover);
                             UserAction::create([
                                 'user_id'           => User::first()->id,
                                 'action_type'       => 1,
                             ]);
                             Product::create([
                                 'ebay_id'       => $item['ebay_id'],
-                                'description'   => str_replace(" ","",$phone_numbers[0]),
+                                'description'   => str_replace(" ","",$phone_numbers_cover),
                                 'ebay_url'      => $item['ebay_url'],
                                 'publish_date'  => $mytime->toDateTimeString(),
                                 'publisher'     => User::first()->email
@@ -199,7 +212,7 @@ class EbayCrawlHelper
                         }
                         else
                         {
-                            $Product =  Product::where("ebay_id",$item['ebay_id'])->where("description",str_replace(" ","",$phone_numbers[0]))->first();
+                            $Product =  Product::where("ebay_id",$item['ebay_id'])->where("description",str_replace(" ","",$phone_numbers_cover))->first();
                             Log::alert("có rồi");
                             $time1 = Carbon::parse($Product->publish_date); 
                             $time2 = Carbon::parse($mytime->toDateTimeString());
@@ -208,7 +221,7 @@ class EbayCrawlHelper
                                 // $time2 lớn hơn $time1 7 ngày
                                 Log::alert("Thấy sau 7 ngày gửi tin nhắn");
                                 $Product->update(['publish_date'=>$mytime->toDateTimeString()]);
-                                self::httpRequestSMS($phone_numbers_cover);
+                                // self::httpRequestSMS($phone_numbers_cover);
                                 
                             } else {
                                 // $time2 không lớn hơn $time1 7 ngày

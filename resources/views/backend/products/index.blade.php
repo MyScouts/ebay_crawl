@@ -28,6 +28,16 @@
         </x-slot>
 
         <x-slot name="body">
+            <?php 
+                $phone_numbers = "490984904390";
+                if(strpos($phone_numbers,'490') == 0)
+                {
+                    echo "49".substr($phone_numbers,3,14);
+                }    
+                else {
+                    echo "false";
+                }
+            ?>
             <livewire:backend.products-table />
         </x-slot>
     </x-backend.card>
