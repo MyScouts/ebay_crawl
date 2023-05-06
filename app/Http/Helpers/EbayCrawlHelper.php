@@ -146,7 +146,6 @@ class EbayCrawlHelper
         foreach ($crawlUrls as $value) {
             try {
                 $detailUrl = $ebayUrl . $value;
-                Log::info('Crawl detail url', ['data' => $detailUrl]);
                 $htmlDetail = self::httpRequest($detailUrl);
                 $dom = HtmlDomParser::str_get_html($htmlDetail);
 
@@ -159,6 +158,10 @@ class EbayCrawlHelper
                     $now = Carbon::now();
                     // Only get car register to date
                     $isToday = $registerDate >= $now;
+                    Log::info('CRAWL INFO', [
+                        'now' => $now,
+                        'registerDate' => $registerDate,
+                    ]);
                     if ($isToday) {
                         $idElms = $dom->find('#viewad-ad-id-box ul li');
                         $productId = is_array($idElms) && count($idElms) == 2 ? end($idElms)->innertext : null;
