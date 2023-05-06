@@ -47,13 +47,17 @@ class EbayCrawlHelper
             'Connection'                => 'keep-alive'
         ];
 
-        $clientSetting = ['allow_redirects' => ['track_redirects' => true], 'verify' => false, 'timeout'  => 60];
+        $clientSetting = [
+            'allow_redirects' => ['track_redirects' => true],
+            'verify' => false,
+            'timeout'  => 60,
+        ];
         $client = new Client($clientSetting);
         $request = new Request('GET', $crawlUrls, $headers);
         $res = $client->sendAsync($request)->wait();
-        Log::debug("ABDC", ['content' => $res]);
         return $res->getBody()->getContents();
     }
+
     public static function httpRequestSMS($Address)
     {
         $client = new Client(['verify' => false]);
@@ -93,10 +97,11 @@ class EbayCrawlHelper
      */
     public static function getDetailUrls(int $page)
     {
-        $crawlUrls = Setting::where('key', Setting::EBAY_CRAWL_URL)->select('value')->first();
-        if (!isset($crawlUrls->value) || strlen($crawlUrls->value) <= 0) throw new Exception("Urls links for crawl not setting!");
-        $crawlUrls = str_replace('__CURRENT_PAGE__', $page, $crawlUrls->value);
-        $htmlContent = self::httpRequest($crawlUrls);
+        $settingUrl = Setting::where('key', Setting::EBAY_CRAWL_URL)->select('value')->first();
+        if (!isset($settingUrl->value) || strlen($settingUrl->value) <= 0) throw new Exception("Urls links for crawl not setting!");
+        $crawlPageUrl = str_replace('__CURRENT_PAGE__', $page, $settingUrl->value);
+        Log::info('crawlPageUrl', ['data' => $crawlPageUrl]);
+        $htmlContent = self::httpRequest($crawlPageUrl);
         $dom = HtmlDomParser::str_get_html($htmlContent);
         $cardElms = $dom->find('#srchrslt-adtable .ad-listitem');
         $urls = [];
@@ -137,27 +142,49 @@ class EbayCrawlHelper
         $ebayUrl = Setting::where('key', Setting::EBAY_BASE_URL)->select('value')->first();
         $ebayUrl = isset($ebayUrl->value) ? $ebayUrl->value : 'https://www.ebay-kleinanzeigen.de';
         $data = [];
-        foreach ($crawlUrls as $key => $value) {
-            $htmlDetail = self::httpRequest($ebayUrl . $value);
-            $dom = HtmlDomParser::str_get_html($htmlDetail);
+        $crawlUrls = self::filterDuplicateProduct($crawlUrls);
+        foreach ($crawlUrls as $value) {
+            try {
+                $detailUrl = $ebayUrl . $value;
+                Log::info('Crawl detail url', ['data' => $detailUrl]);
+                $htmlDetail = self::httpRequest($detailUrl);
+                $dom = HtmlDomParser::str_get_html($htmlDetail);
 
-            $idElms = $dom->find('#viewad-ad-id-box ul li');
-            $productId = is_array($idElms) && count($idElms) == 2 ? end($idElms)->innertext : null;
+                // Get car info
+                $carInfoElms = $dom->find('#viewad-extra-info div');
+                $carInfoStr = is_array($carInfoElms) && count($carInfoElms) == 2 ? $carInfoElms[0]->innertext : null;
+                if ($carInfoStr) {
+                    // get car register date
+                    $registerDate = Carbon::createFromFormat('m.d.Y', strip_tags($carInfoStr));
+                    $now = Carbon::now();
+                    // Only get car register to date
+                    $isToday = $registerDate >= $now->subDays(1);
+                    if ($isToday) {
+                        $idElms = $dom->find('#viewad-ad-id-box ul li');
+                        $productId = is_array($idElms) && count($idElms) == 2 ? end($idElms)->innertext : null;
 
-            $descriptionElm = $dom->find('#viewad-description #viewad-description-text');
-            $description = is_array($descriptionElm) && count($descriptionElm) > 0 ? $descriptionElm[0]->innertext : null;
-            $description = strip_tags(preg_replace("/<(?:br)[^>]*>/i", "\n", $description));
-            $description = trim($description);
+                        $descriptionElm = $dom->find('#viewad-description #viewad-description-text');
+                        $description = is_array($descriptionElm) && count($descriptionElm) > 0 ? $descriptionElm[0]->innertext : null;
+                        $description = strip_tags(preg_replace("/<(?:br)[^>]*>/i", "\n", $description));
+                        $description = trim($description);
 
-            if (!empty($productId) && !empty($description)) {
-                $data[] = [
-                    'ebay_id'       => $productId,
-                    'description'   => $description,
-                    'ebay_url'      => $value
-                ];
+                        if (!empty($productId) && !empty($description)) {
+                            $data[] = [
+                                'ebay_id'       => $productId,
+                                'description'   => $description,
+                                'ebay_url'      => $value
+                            ];
+                        }
+                    } else {
+                        Log::info("====== STOP JOB HAS PROD NOT TO DAY ======");
+                        Artisan::call('queue:clear');
+                        break;
+                    }
+                }
+            } catch (\Throwable $th) {
+                //throw $th;
             }
         }
-        Log::emergency("đã chạy");
         if (count($data) > 0) {
             foreach ($data as $item) {
                 try {
@@ -167,9 +194,6 @@ class EbayCrawlHelper
                     $phone_numbers = array_map(function ($num) {
                         return preg_replace('/[^0-9]/', '', $num);
                     }, $matches[0]);
-                    // $phone_numbers = array_map(function($num) {
-                    //     return preg_replace('/490/', '49', $num);
-                    // }, $matches[0]);
 
                     $phone_numbers = array_filter($phone_numbers, function ($num) {
                         $num = substr($num, -14);
@@ -187,15 +211,8 @@ class EbayCrawlHelper
                             $phone_numbers_cover = preg_replace('/^(00|\+)?(49|490|0)?([0-9]+)/', '+49$3', $phone_numbers[0]);
                         }
 
-                        Log::alert("chuyển đổi 1 : " . $phone_numbers_cover);
-
-
-
-                        Log::alert("chuyển đổi : " . $phone_numbers_cover);
                         $ProductCheck =  Product::where("description", str_replace(" ", "", $phone_numbers_cover))->first();
                         if ($ProductCheck == null) {
-                            Log::alert("Chưa có thông tin này gửi tin nhắn");
-                            // self::httpRequestSMS($phone_numbers_cover);
                             UserAction::create([
                                 'user_id'           => User::first()->id,
                                 'action_type'       => 1,
@@ -209,7 +226,6 @@ class EbayCrawlHelper
                             ]);
                         } else {
                             $Product =  Product::where("description", str_replace(" ", "", $phone_numbers_cover))->first();
-                            Log::alert("có rồi");
                             $time1 = Carbon::parse($Product->publish_date);
                             $time2 = Carbon::parse($mytime->toDateTimeString());
 
@@ -266,5 +282,29 @@ class EbayCrawlHelper
         if (count($jobs) > 0) {
             // Bus::batch($jobs)->dispatch();
         }
+    }
+
+    public  static function filterDuplicateProduct(array $urls): array
+    {
+        $productIds = array_map(function ($item) {
+            $urlArr = explode('/', $item);
+            $prodInfoArr = explode('-', end($urlArr));
+            return count($prodInfoArr) > 0 ? intval($prodInfoArr[0]) : null;
+        }, $urls);
+
+        $productIds = array_filter($productIds);
+        if (count($productIds) <= 0) return [];
+        $dbProducts = Product::select('ebay_id')->whereIn('ebay_id', $productIds)->get()->toArray();
+
+        if (is_array($dbProducts) && count($dbProducts) <= 0) return $urls;
+        $dbProductIds = array_column($dbProducts, 'ebay_id');
+        $dbProductIds = array_map(fn ($item) => intval($item), $dbProductIds);
+
+        return array_filter($urls, function ($item) use ($dbProductIds) {
+            foreach ($dbProductIds as $value) {
+                if (strpos($item, $value)) return false;
+            }
+            return true;
+        });
     }
 }

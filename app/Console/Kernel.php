@@ -37,7 +37,7 @@ class Kernel extends ConsoleKernel
         $hour = isset($dailyTimeSetting->value) && intval($dailyTimeSetting->value) > 0 ? intval($dailyTimeSetting->value) : "1";
         // $schedule->command(DailyEbayCrawlCommand::class)->cron("0 */$hour * * *");
         $schedule->command(DailyEbayCrawlCommand::class)->cron("*/$hour * * * *");
-        $schedule->command(ResetCachePublish::class)->everyMinute();
+        // $schedule->command(ResetCachePublish::class)->everyMinute();
         $schedule->command(CleanProductCommand::class)->dailyAt("23:59");
     }
 
