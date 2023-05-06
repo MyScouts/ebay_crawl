@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\BackEnd;
+namespace App\Http\Controllers\Backend;
 
 use App\Exceptions\GeneralException;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Log;
+use Illuminate\Support\Facades\Log;
 
 class SettingController extends Controller
 {

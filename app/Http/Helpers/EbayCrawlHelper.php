@@ -2,10 +2,6 @@
 
 namespace App\Http\Helpers;
 
-use Log;
-use Cache;
-use Artisan;
-use Exception;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use App\Models\Product;
@@ -14,6 +10,10 @@ use App\Models\UserAction;
 use App\Jobs\CrawlEbayJobs;
 use GuzzleHttp\Psr7\Request;
 use App\Domains\Auth\Models\User;
+use Exception;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use KubAT\PhpSimple\HtmlDomParser;
 
 class EbayCrawlHelper
@@ -64,20 +64,20 @@ class EbayCrawlHelper
         ];
 
         $body = [
-                "contentCategory" => "informational",
-                "maxSmsPerMessage" => 10,
-                "messageContent" => "Hallo, \nich habe deine Nummer von Kleinanzeigen. Falls du den Wert von deinem Auto genau wissen willst, kannst du das bei uns kostenlos auf www.fahrzeugbewertung.repareo.de machen. Dort bekommst du auch ein sofortiges Kaufangebot.\nLiebe Grüße \nLuka von repareo.de - größtes Werkstattportal Deutschlands",
-                "messageType" => "default",
-                "priority" => 5,
-                "recipientAddressList" => [
-                    $Address
-                ],
-                "senderAddress" => "repareo",
-                "sendAsFlashSms" => false,
-                "senderAddressType" => "alphanumeric",
-                "test" => false,
-                "validityPeriode" => 300
-            ];
+            "contentCategory" => "informational",
+            "maxSmsPerMessage" => 10,
+            "messageContent" => "Hallo, \nich habe deine Nummer von Kleinanzeigen. Falls du den Wert von deinem Auto genau wissen willst, kannst du das bei uns kostenlos auf www.fahrzeugbewertung.repareo.de machen. Dort bekommst du auch ein sofortiges Kaufangebot.\nLiebe Grüße \nLuka von repareo.de - größtes Werkstattportal Deutschlands",
+            "messageType" => "default",
+            "priority" => 5,
+            "recipientAddressList" => [
+                $Address
+            ],
+            "senderAddress" => "repareo",
+            "sendAsFlashSms" => false,
+            "senderAddressType" => "alphanumeric",
+            "test" => false,
+            "validityPeriode" => 300
+        ];
         $response = $client->post('https://api.linkmobility.eu/rest/smsmessaging/text', [
             'headers' => $headers,
             'json' => $body,
@@ -114,8 +114,8 @@ class EbayCrawlHelper
                     $endDate = strtotime($times[1]);
 
                     // if ($time >= $startDate && $time <= $endDate) {
-                        $urlElm = $value->find('.aditem-image a');
-                        if (isset($urlElm) && count($urlElm) > 0) $urls[] = $urlElm[0]->href;
+                    $urlElm = $value->find('.aditem-image a');
+                    if (isset($urlElm) && count($urlElm) > 0) $urls[] = $urlElm[0]->href;
                     // }
                 }
             }
@@ -164,83 +164,71 @@ class EbayCrawlHelper
                     $string = $item['description'];
                     $pattern = '/(?<!\d)(\+49|0|0049)[\d .\/:-]+(?!\d)/';
                     preg_match_all($pattern, $string, $matches);
-                    $phone_numbers = array_map(function($num) {
+                    $phone_numbers = array_map(function ($num) {
                         return preg_replace('/[^0-9]/', '', $num);
-                    }, $matches[0]); 
+                    }, $matches[0]);
                     // $phone_numbers = array_map(function($num) {
                     //     return preg_replace('/490/', '49', $num);
-                    // }, $matches[0]); 
-                    
-                    $phone_numbers = array_filter($phone_numbers, function($num) {
+                    // }, $matches[0]);
+
+                    $phone_numbers = array_filter($phone_numbers, function ($num) {
                         $num = substr($num, -14);
-                        return strlen($num) >= 9 && strlen($num) <= 14;  
+                        return strlen($num) >= 9 && strlen($num) <= 14;
                     });
-                    
-                    if(!isset($phone_numbers[0]))
-                    {
-                        
-                    }
-                    else {
+
+                    if (!isset($phone_numbers[0])) {
+                    } else {
                         $mytime = Carbon::now();
                         Log::alert($phone_numbers[0]);
                         $phone_numbers_cover = $phone_numbers[0];
                         if (substr($phone_numbers_cover, 0, 3) === "490") {
                             $phone_numbers_cover = "+49" . substr($phone_numbers_cover, 3);
-                        }
-                        else
-                        {
+                        } else {
                             $phone_numbers_cover = preg_replace('/^(00|\+)?(49|490|0)?([0-9]+)/', '+49$3', $phone_numbers[0]);
                         }
-                        
-                        Log::alert("chuyển đổi 1 : ".$phone_numbers_cover);
+
+                        Log::alert("chuyển đổi 1 : " . $phone_numbers_cover);
 
 
-                        
-                        Log::alert("chuyển đổi : ".$phone_numbers_cover);
-                        $ProductCheck =  Product::where("description",str_replace(" ","",$phone_numbers_cover))->first();
-                        if($ProductCheck == null)
-                        {
+
+                        Log::alert("chuyển đổi : " . $phone_numbers_cover);
+                        $ProductCheck =  Product::where("description", str_replace(" ", "", $phone_numbers_cover))->first();
+                        if ($ProductCheck == null) {
                             Log::alert("Chưa có thông tin này gửi tin nhắn");
-                            self::httpRequestSMS($phone_numbers_cover);
+                            // self::httpRequestSMS($phone_numbers_cover);
                             UserAction::create([
                                 'user_id'           => User::first()->id,
                                 'action_type'       => 1,
                             ]);
                             Product::create([
                                 'ebay_id'       => $item['ebay_id'],
-                                'description'   => str_replace(" ","",$phone_numbers_cover),
+                                'description'   => str_replace(" ", "", $phone_numbers_cover),
                                 'ebay_url'      => $item['ebay_url'],
                                 'publish_date'  => $mytime->toDateTimeString(),
                                 'publisher'     => User::first()->email
-                            ]);                            
-                        }
-                        else
-                        {
-                            $Product =  Product::where("description",str_replace(" ","",$phone_numbers_cover))->first();
+                            ]);
+                        } else {
+                            $Product =  Product::where("description", str_replace(" ", "", $phone_numbers_cover))->first();
                             Log::alert("có rồi");
-                            $time1 = Carbon::parse($Product->publish_date); 
+                            $time1 = Carbon::parse($Product->publish_date);
                             $time2 = Carbon::parse($mytime->toDateTimeString());
 
                             if ($time2->diffInDays($time1) > 7) {
                                 // $time2 lớn hơn $time1 7 ngày
                                 Log::alert("Thấy sau 7 ngày gửi tin nhắn");
-                                $Product->update(['publish_date'=>$mytime->toDateTimeString()]);
-                                self::httpRequestSMS($phone_numbers_cover);
-                                
+                                $Product->update(['publish_date' => $mytime->toDateTimeString()]);
+                                // self::httpRequestSMS($phone_numbers_cover);
+
                             } else {
                                 // $time2 không lớn hơn $time1 7 ngày
                                 Log::alert("Đã thấy trong 7 ngày gần đây");
-
                             }
                         }
-
-                    
                     }
 
                     Cache::increment(self::TOTAL_ADD_PRODUCT, 1);
-                    
                 } catch (\Throwable $th) {
-                    Log::emergency("có lỗi xảy ra".$th);
+                    Log::emergency("có lỗi xảy ra" . $th);
                     Cache::increment(self::TOTAL_ERRORS_CRAWL, 1);
                     $totalErrors = Cache::get(self::TOTAL_ERRORS_CRAWL);
                     $totalErrors = intval($totalErrors);
