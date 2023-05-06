@@ -157,7 +157,7 @@ class EbayCrawlHelper
                     $registerDate = Carbon::createFromFormat('m.d.Y', strip_tags($carInfoStr));
                     $now = Carbon::now();
                     // Only get car register to date
-                    $isToday = $registerDate >= $now;
+                    $isToday = $registerDate->gte($now);
                     Log::info('CRAWL INFO', [
                         'now'           => $now,
                         'registerDate'  => $registerDate,
