@@ -158,7 +158,7 @@ class EbayCrawlHelper
                     $registerDate = Carbon::createFromFormat('m.d.Y', strip_tags($carInfoStr));
                     $now = Carbon::now();
                     // Only get car register to date
-                    $isToday = $registerDate >= $now->subDays(1);
+                    $isToday = $registerDate >= $now;
                     if ($isToday) {
                         $idElms = $dom->find('#viewad-ad-id-box ul li');
                         $productId = is_array($idElms) && count($idElms) == 2 ? end($idElms)->innertext : null;
