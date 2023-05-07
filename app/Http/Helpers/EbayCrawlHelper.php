@@ -181,9 +181,9 @@ class EbayCrawlHelper
                             ];
                         }
                     } else {
-                        // Log::info("====== STOP JOB HAS PROD NOT TO DAY ======");
-                        // Artisan::call('queue:clear');
-                        // break;
+                        Log::info("====== STOP JOB HAS PROD NOT TO DAY ======");
+                        Artisan::call('queue:clear');
+                        break;
                     }
                 }
             } catch (\Throwable $th) {
