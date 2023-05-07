@@ -154,10 +154,10 @@ class EbayCrawlHelper
                 $carInfoStr = is_array($carInfoElms) && count($carInfoElms) == 2 ? $carInfoElms[0]->innertext : null;
                 if ($carInfoStr) {
                     // get car register date
-                    $registerDate = Carbon::createFromFormat('d.m.Y', strip_tags($carInfoStr));
+                    $registerDate = Carbon::parse(strip_tags($carInfoStr));
                     $now = Carbon::now();
                     // Only get car register to date
-                    $isToday = $registerDate->gte($now);
+                    $isToday = $registerDate->isSameDay($now);
                     Log::info('CRAWL INFO', [
                         'urlDetail'     =>  $detailUrl,
                         'now'           => $now,
