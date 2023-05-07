@@ -159,6 +159,7 @@ class EbayCrawlHelper
                     // Only get car register to date
                     $isToday = $registerDate->gte($now);
                     Log::info('CRAWL INFO', [
+                        'urlDetail'     =>  $detailUrl,
                         'now'           => $now,
                         'registerDate'  => $registerDate,
                         'isToday'       => $isToday
