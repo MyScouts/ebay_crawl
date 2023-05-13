@@ -36,6 +36,6 @@ class Product extends Model
 
     public function getEbayUrlAttribute($value)
     {
-        return "https://www.ebay-kleinanzeigen.de$value";
+        return $value;
     }
 }
