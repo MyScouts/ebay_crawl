@@ -140,7 +140,7 @@ class EbayCrawlHelper
     public static function processingCrawl(array $crawlUrls)
     {
         $ebayUrl = Setting::where('key', Setting::EBAY_BASE_URL)->select('value')->first();
-        $ebayUrl = isset($ebayUrl->value) ? $ebayUrl->value : 'https://www.ebay-kleinanzeigen.de';
+        $ebayUrl = isset($ebayUrl->value) ? $ebayUrl->value : 'https://www.kleinanzeigen.de';
         $data = [];
         $crawlUrls = self::filterDuplicateProduct($crawlUrls);
         foreach ($crawlUrls as $value) {
@@ -177,7 +177,7 @@ class EbayCrawlHelper
                             $data[] = [
                                 'ebay_id'       => $productId,
                                 'description'   => $description,
-                                'ebay_url'      => $value
+                                'ebay_url'      => $detailUrl
                             ];
                         }
                     } else {
