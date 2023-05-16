@@ -97,12 +97,8 @@ class EbayCrawlHelper
             if (isset($timeElm) && count($timeElm) > 0) {
                 $timeText = strip_tags($timeElm[0]->innertext);
                 $time = trim(substr($timeText, strpos($timeText, ',') + 1));
-                if (preg_match("/^(?:2[0-4]|[01][1-9]|10):([0-5][0-9])$/", $time) == 1) {
-                    // if ($time >= $startDate && $time <= $endDate) {
-                    $urlElm = $value->find('.aditem-image a');
-                    if (isset($urlElm) && count($urlElm) > 0) $urls[] = $urlElm[0]->href;
-                    // }
-                }
+                $urlElm = $value->find('.aditem-image a');
+                if (isset($urlElm) && count($urlElm) > 0) $urls[] = $urlElm[0]->href;
             }
         }
 
