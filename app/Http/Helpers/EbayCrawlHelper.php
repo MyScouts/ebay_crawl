@@ -31,18 +31,8 @@ class EbayCrawlHelper
     public static function httpRequest($crawlUrls)
     {
         $headers = [
-            // 'authority'                 => 'suchen.mobile.de',
             'accept'                    => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
             'accept-language'           => 'en-US,en;q=0.9,vi;q=0.8',
-            // 'cache-control'             => 'max-age=0',
-            // 'sec-ch-ua'                 => '"Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"',
-            // 'sec-ch-ua-mobile'          => '?0',
-            // 'sec-ch-ua-platform'        => '"macOS"',
-            // 'sec-fetch-dest'            => 'document',
-            // 'sec-fetch-mode'            => 'navigate',
-            // 'sec-fetch-site'            => 'cross-site',
-            // 'sec-fetch-user'            => '?1',
-            // 'upgrade-insecure-requests' => '1',
             'user-agent'                => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
             'Connection'                => 'keep-alive'
         ];
@@ -88,7 +78,6 @@ class EbayCrawlHelper
         ]);
 
         $responseData = $response->getBody()->getContents();
-        Log::debug("SMS status", ['content' => $responseData]);
     }
     /**
      * initUrl
@@ -97,8 +86,8 @@ class EbayCrawlHelper
      */
     public static function getDetailUrls(int $page)
     {
-        $crawlPageUrl = str_replace('__CURRENT_PAGE__', $page, 'https://www.kleinanzeigen.de/s-anbieter:privat/anzeige:angebote/preis:200:15000/seite:__CURRENT_PAGE__');
-        Log::info('crawlPageUrl', ['data' => $crawlPageUrl]);
+        $settingUrl = Setting::where('key', Setting::EBAY_CRAWL_URL)->select('value')->first();
+        $crawlPageUrl = str_replace('__CURRENT_PAGE__', $page, $settingUrl ? $settingUrl->value : config('ebay.crawl_url'));
         $htmlContent = self::httpRequest($crawlPageUrl);
         $dom = HtmlDomParser::str_get_html($htmlContent);
         $cardElms = $dom->find('#srchrslt-adtable .ad-listitem');
@@ -131,7 +120,7 @@ class EbayCrawlHelper
     public static function processingCrawl(array $crawlUrls)
     {
         $ebayUrl = Setting::where('key', Setting::EBAY_BASE_URL)->select('value')->first();
-        $ebayUrl = isset($ebayUrl->value) ? $ebayUrl->value : 'https://www.kleinanzeigen.de';
+        $ebayUrl = isset($ebayUrl->value) ? $ebayUrl->value : config('ebay.base_url');
         $data = [];
         $crawlUrls = self::filterDuplicateProduct($crawlUrls);
         foreach ($crawlUrls as $value) {
@@ -219,19 +208,12 @@ class EbayCrawlHelper
                                 'publisher'     => User::first()->email
                             ]);
                         } else {
-                            $Product =  Product::where("description", str_replace(" ", "", $phone_numbers_cover))->first();
+                            $Product = Product::where("description", str_replace(" ", "", $phone_numbers_cover))->first();
                             $time1 = Carbon::parse($Product->publish_date);
                             $time2 = Carbon::parse($mytime->toDateTimeString());
 
                             if ($time2->diffInDays($time1) > 7) {
-                                // $time2 lớn hơn $time1 7 ngày
-                                Log::alert("Thấy sau 7 ngày gửi tin nhắn");
                                 $Product->update(['publish_date' => $mytime->toDateTimeString()]);
-                                // self::httpRequestSMS($phone_numbers_cover);
-
-                            } else {
-                                // $time2 không lớn hơn $time1 7 ngày
-                                Log::alert("Đã thấy trong 7 ngày gần đây");
                             }
                         }
                     }
