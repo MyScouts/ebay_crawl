@@ -158,12 +158,6 @@ class EbayCrawlHelper
                     $now = Carbon::now();
                     // Only get car register to date
                     $isToday = $registerDate->isSameDay($now);
-                    Log::info('CRAWL INFO', [
-                        'urlDetail'     =>  $detailUrl,
-                        'now'           => $now,
-                        'registerDate'  => $registerDate,
-                        'isToday'       => $isToday
-                    ]);
                     if ($isToday) {
                         $idElms = $dom->find('#viewad-ad-id-box ul li');
                         $productId = is_array($idElms) && count($idElms) == 2 ? end($idElms)->innertext : null;
@@ -181,9 +175,12 @@ class EbayCrawlHelper
                             ];
                         }
                     } else {
-                        // Log::info("====== STOP JOB HAS PROD NOT TO DAY ======");
-                        // Artisan::call('queue:clear');
-                        // break;
+                        $totalErrors = Cache::get(self::TOTAL_ERRORS_CRAWL);
+                        $totalErrors = intval($totalErrors);
+                        if ($totalErrors >= 20) {
+                            Artisan::call('queue:clear');
+                            return;
+                        }
                     }
                 }
             } catch (\Throwable $th) {
@@ -256,7 +253,8 @@ class EbayCrawlHelper
                     if ($totalErrors >= 150) {
                         Artisan::call('queue:clear');
                         Log::alert("CANCEL JOB", ['TOTAL-PRODUCT-ADDED' => Cache::get(self::TOTAL_ADD_PRODUCT)]);
-                        return;
+                        Cache::forget(self::TOTAL_ERRORS_CRAWL);
+                        break;
                     }
                 }
             }
