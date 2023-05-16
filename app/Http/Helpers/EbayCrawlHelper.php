@@ -97,9 +97,7 @@ class EbayCrawlHelper
      */
     public static function getDetailUrls(int $page)
     {
-        $settingUrl = Setting::where('key', Setting::EBAY_CRAWL_URL)->select('value')->first();
-        if (!isset($settingUrl->value) || strlen($settingUrl->value) <= 0) throw new Exception("Urls links for crawl not setting!");
-        $crawlPageUrl = str_replace('__CURRENT_PAGE__', $page, $settingUrl->value);
+        $crawlPageUrl = str_replace('__CURRENT_PAGE__', $page, 'https://www.kleinanzeigen.de/s-anbieter:privat/anzeige:angebote/preis:200:15000/seite:__CURRENT_PAGE__');
         Log::info('crawlPageUrl', ['data' => $crawlPageUrl]);
         $htmlContent = self::httpRequest($crawlPageUrl);
         $dom = HtmlDomParser::str_get_html($htmlContent);
@@ -111,13 +109,6 @@ class EbayCrawlHelper
                 $timeText = strip_tags($timeElm[0]->innertext);
                 $time = trim(substr($timeText, strpos($timeText, ',') + 1));
                 if (preg_match("/^(?:2[0-4]|[01][1-9]|10):([0-5][0-9])$/", $time) == 1) {
-                    $dailyTimeSetting = Setting::where('key', Setting::EBAY_DAILY_CRAWL_PRODUCT_TIME)->select('value')->first();
-                    $dailyTime = isset($dailyTimeSetting->value) && count(explode(';', $dailyTimeSetting->value)) == 2 ? $dailyTimeSetting->value : "03:00;16:00";
-                    $times = explode(';', $dailyTime);
-                    $time = strtotime($time);
-                    $startDate = strtotime($times[0]);
-                    $endDate = strtotime($times[1]);
-
                     // if ($time >= $startDate && $time <= $endDate) {
                     $urlElm = $value->find('.aditem-image a');
                     if (isset($urlElm) && count($urlElm) > 0) $urls[] = $urlElm[0]->href;
@@ -179,6 +170,7 @@ class EbayCrawlHelper
                         $totalErrors = intval($totalErrors);
                         if ($totalErrors >= 20) {
                             Artisan::call('queue:clear');
+                            Cache::forget(self::TOTAL_ERRORS_CRAWL);
                             return;
                         }
                     }
