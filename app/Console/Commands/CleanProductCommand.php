@@ -41,6 +41,6 @@ class CleanProductCommand extends Command
     public function handle()
     {
         Log::debug("=====CLEAN PRODUCT=====");
-        Product::where('created_at', '<=', Carbon::now())->forceDelete();
+        // Product::where('created_at', '<=', Carbon::now())->forceDelete();
     }
 }
