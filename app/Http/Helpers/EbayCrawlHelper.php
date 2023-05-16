@@ -161,7 +161,7 @@ class EbayCrawlHelper
                     }
                 }
             } catch (\Throwable $th) {
-                //throw $th;
+                Log::error('processingCrawl', ['error' => $th->getMessage()]);
             }
         }
         if (count($data) > 0) {
@@ -216,7 +216,7 @@ class EbayCrawlHelper
 
                     Cache::increment(self::TOTAL_ADD_PRODUCT, 1);
                 } catch (\Throwable $th) {
-                    Log::emergency("có lỗi xảy ra" . $th);
+                    Log::error('processingCrawl', ['error' => $th->getMessage()]);
                     Cache::increment(self::TOTAL_ERRORS_CRAWL, 1);
                     $totalErrors = Cache::get(self::TOTAL_ERRORS_CRAWL);
                     $totalErrors = intval($totalErrors);
