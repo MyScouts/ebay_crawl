@@ -156,7 +156,7 @@ class EbayCrawlHelper
                         $totalErrors = Cache::get(self::TOTAL_ERRORS_CRAWL);
                         $totalErrors = intval($totalErrors);
                         Log::debug("Error", ['data' => $totalErrors]);
-                        if ($totalErrors >= 20) {
+                        if ($totalErrors >= 50) {
                             Artisan::call('queue:clear');
                             Cache::forget(self::TOTAL_ERRORS_CRAWL);
                             return;
