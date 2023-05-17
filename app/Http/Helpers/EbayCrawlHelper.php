@@ -152,9 +152,11 @@ class EbayCrawlHelper
                             ];
                         }
                     } else {
+                        Cache::increment(self::TOTAL_ERRORS_CRAWL);
                         $totalErrors = Cache::get(self::TOTAL_ERRORS_CRAWL);
                         $totalErrors = intval($totalErrors);
-                        if ($totalErrors >= 50) {
+                        Log::debug("Error", ['data' => $totalErrors]);
+                        if ($totalErrors >= 20) {
                             Artisan::call('queue:clear');
                             Cache::forget(self::TOTAL_ERRORS_CRAWL);
                             return;
