@@ -119,6 +119,7 @@ class EbayCrawlHelper
         $ebayUrl = isset($ebayUrl->value) ? $ebayUrl->value : config('ebay.base_url');
         $data = [];
         $crawlUrls = self::filterDuplicateProduct($crawlUrls);
+        Log::debug('Crawl Urls', ['urls' => $crawlUrls]);
         foreach ($crawlUrls as $value) {
             try {
                 $detailUrl = $ebayUrl . $value;
