@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\Product;
-use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -41,6 +40,6 @@ class CleanProductCommand extends Command
     public function handle()
     {
         Log::debug("=====CLEAN PRODUCT=====");
-        // Product::where('created_at', '<=', Carbon::now())->forceDelete();
+        Product::whereDate('created_at', '<', date('Y-m-d'))->forceDelete();
     }
 }

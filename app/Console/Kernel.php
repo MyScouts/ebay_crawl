@@ -38,7 +38,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command(DailyEbayCrawlCommand::class)->cron("0 */$hour * * *");
         $schedule->command(DailyEbayCrawlCommand::class)->cron("*/$hour * * * *");
         // $schedule->command(ResetCachePublish::class)->everyMinute();
-        $schedule->command(CleanProductCommand::class)->dailyAt("23:59");
+        $schedule->command(CleanProductCommand::class)->dailyAt("00:15");
     }
 
     /**
