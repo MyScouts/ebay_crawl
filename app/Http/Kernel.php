@@ -56,7 +56,7 @@ class Kernel extends HttpKernel
              */
             // '2fa:enabled',
             'auth',
-            'password.expires',
+            // 'password.expires',
             'is_admin',
         ],
     ];
