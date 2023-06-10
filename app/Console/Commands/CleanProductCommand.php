@@ -40,6 +40,6 @@ class CleanProductCommand extends Command
     public function handle()
     {
         Log::debug("=====CLEAN PRODUCT=====");
-        Product::whereDate('created_at', '<', date('Y-m-d'))->forceDelete();
+        Product::whereDate('created_at', '<=', date('Y-m-d'))->forceDelete();
     }
 }
